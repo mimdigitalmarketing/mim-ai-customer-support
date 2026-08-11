@@ -1,224 +1,280 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MIM AI — Customer Support Assistant</title>
-<link rel="stylesheet" href="/styles.css">
-</head>
-<body>
+const form = document.getElementById("chatForm");
+const messages = document.getElementById("messages");
+const messageInput = document.getElementById("message");
+const nameInput = document.getElementById("name");
+const sendBtn = document.getElementById("sendBtn");
 
-<main class="shell">
+let sessionId =
+  localStorage.getItem("mim_session_id") ||
+  `WEB-${crypto.randomUUID()}`;
 
-  <section class="hero">
+localStorage.setItem("mim_session_id", sessionId);
 
-    <div class="brand-row">
-      <div class="logo">M</div>
+function addMessage(text, type = "assistant") {
+  const row = document.createElement("div");
+  row.className = `message ${type}`;
 
-      <div>
-        <div class="brand">MIM AI</div>
-        <div class="eyebrow">CUSTOMER SUPPORT ASSISTANT</div>
-      </div>
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+
+  row.appendChild(bubble);
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
+
+  return row;
+}
+
+function typing() {
+  const row = document.createElement("div");
+
+  row.className = "message assistant";
+
+  row.innerHTML = `
+    <div class="bubble typing">
+      <span></span>
+      <span></span>
+      <span></span>
     </div>
+  `;
 
-    <h1>
-      Fast answers.<br>
-      <span>Human help when it matters.</span>
-    </h1>
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
 
-    <p class="hero-copy">
-      A production-minded AI support experience powered by approved knowledge,
-      controlled routing, secure automation, and human escalation.
-    </p>
+  return row;
+}
 
-    <div class="chips">
-      <span>24/7 FAQ support</span>
-      <span>Human escalation</span>
-      <span>Audit logging</span>
-    </div>
+async function sendMessage(text) {
+  const clean = text.trim();
 
+  if (!clean) return;
 
-    <!-- TRACK CASE SECTION -->
+  addMessage(clean, "user");
 
-    <section class="case-tracker">
+  messageInput.value = "";
+  sendBtn.disabled = true;
 
-      <div class="case-tracker-heading">
-        <span class="case-icon">⌕</span>
+  const typingRow = typing();
 
-        <div>
-          <h2>Track Your Case</h2>
-          <p>Enter your Case ID to check the latest status.</p>
-        </div>
-      </div>
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
 
-      <form id="caseStatusForm" class="case-form">
+      headers: {
+        "Content-Type": "application/json"
+      },
 
-        <input
-          id="caseId"
-          type="text"
-          placeholder="Example: MIM-20260811-FASILG"
-          autocomplete="off"
-          required
-        >
+      body: JSON.stringify({
+        name: nameInput.value.trim() || "Website Visitor",
+        channel: "web",
+        message: clean,
+        session_id: sessionId
+      })
+    });
 
-        <button id="caseStatusBtn" type="submit">
-          Check Status
-        </button>
+    const data = await response.json();
 
-      </form>
+    typingRow.remove();
 
-      <div id="caseStatusMessage" class="case-status-message"></div>
+    if (!response.ok) {
+      addMessage(
+        data.reply || "Support is temporarily unavailable.",
+        "system"
+      );
 
-      <div id="caseResult" class="case-result hidden">
+      return;
+    }
 
-        <div class="case-result-top">
+    if (data.session_id) {
+      sessionId = data.session_id;
 
-          <div>
-            <small>CASE ID</small>
-            <strong id="resultCaseId">—</strong>
-          </div>
+      localStorage.setItem(
+        "mim_session_id",
+        sessionId
+      );
+    }
 
-          <span id="resultStatus" class="status-badge">
-            —
-          </span>
+    addMessage(
+      data.reply ||
+      "Thanks — your request has been received."
+    );
 
-        </div>
+  } catch (error) {
+    typingRow.remove();
 
+    addMessage(
+      "I couldn't reach support just now. Please try again.",
+      "system"
+    );
 
-        <div class="case-details">
+  } finally {
+    sendBtn.disabled = false;
+    messageInput.focus();
+  }
+}
 
-          <div class="case-detail">
-            <small>Assigned To</small>
-            <strong id="resultAssignedTo">—</strong>
-          </div>
+form.addEventListener("submit", event => {
+  event.preventDefault();
+  sendMessage(messageInput.value);
+});
 
-          <div class="case-detail">
-            <small>Assigned At</small>
-            <strong id="resultAssignedAt">—</strong>
-          </div>
+document
+  .querySelectorAll("[data-message]")
+  .forEach(button => {
+    button.addEventListener("click", () => {
+      sendMessage(button.dataset.message);
+    });
+  });
 
-          <div class="case-detail">
-            <small>Resolved At</small>
-            <strong id="resultResolvedAt">—</strong>
-          </div>
 
-        </div>
+// CASE STATUS TRACKER
 
+const caseStatusForm =
+  document.getElementById("caseStatusForm");
 
-        <div class="resolution-box">
-          <small>Resolution Note</small>
-          <p id="resultResolutionNote">—</p>
-        </div>
+const caseIdInput =
+  document.getElementById("caseId");
 
-      </div>
+const caseStatusBtn =
+  document.getElementById("caseStatusBtn");
 
-    </section>
+const caseStatusMessage =
+  document.getElementById("caseStatusMessage");
 
-  </section>
+const caseResult =
+  document.getElementById("caseResult");
 
+const resultCaseId =
+  document.getElementById("resultCaseId");
 
-  <!-- CHAT -->
+const resultStatus =
+  document.getElementById("resultStatus");
 
-  <section class="chat-card">
+const resultAssignedTo =
+  document.getElementById("resultAssignedTo");
 
-    <header class="chat-header">
+const resultAssignedAt =
+  document.getElementById("resultAssignedAt");
 
-      <div class="avatar">AI</div>
+const resultResolvedAt =
+  document.getElementById("resultResolvedAt");
 
-      <div>
-        <strong>MIM Support</strong>
+const resultResolutionNote =
+  document.getElementById("resultResolutionNote");
 
-        <small>
-          <i></i>
-          Online
-        </small>
-      </div>
+function formatDate(value) {
+  if (!value) return "—";
 
-      <div class="secure">
-        Secure demo
-      </div>
+  const date = new Date(value);
 
-    </header>
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
 
+  return date.toLocaleString();
+}
 
-    <div id="messages" class="messages">
+function updateStatusStyle(status) {
+  resultStatus.className = "status-badge";
 
-      <div class="message assistant">
-        <div class="bubble">
-          Hi! I’m the MIM AI support assistant.
-          Ask me a support question and I’ll either help immediately
-          or route you to a human when needed.
-        </div>
-      </div>
+  const normalized =
+    String(status || "").toLowerCase();
 
-    </div>
+  if (normalized === "resolved") {
+    resultStatus.classList.add("status-resolved");
 
+  } else if (normalized === "open") {
+    resultStatus.classList.add("status-open");
 
-    <div class="quick-actions">
+  } else if (
+    normalized === "in progress" ||
+    normalized === "in_progress"
+  ) {
+    resultStatus.classList.add("status-progress");
 
-      <button data-message="What is your return policy?">
-        Return policy
-      </button>
+  } else {
+    resultStatus.classList.add("status-default");
+  }
+}
 
-      <button data-message="I want a refund and need to speak to a person.">
-        Refund help
-      </button>
+caseStatusForm.addEventListener(
+  "submit",
+  async event => {
 
-      <button data-message="What are your business hours?">
-        Business hours
-      </button>
+    event.preventDefault();
 
-    </div>
+    const caseId =
+      caseIdInput.value.trim();
 
+    if (!caseId) return;
 
-    <form id="chatForm" class="composer">
+    caseStatusBtn.disabled = true;
+    caseStatusBtn.textContent = "Checking...";
 
-      <input
-        id="name"
-        maxlength="80"
-        placeholder="Your name (optional)"
-      >
+    caseStatusMessage.textContent =
+      "Looking up your case...";
 
-      <div class="input-row">
+    caseStatusMessage.className =
+      "case-status-message loading";
 
-        <textarea
-          id="message"
-          rows="1"
-          maxlength="4000"
-          placeholder="Type your message..."
-          required
-        ></textarea>
+    caseResult.classList.add("hidden");
 
-        <button
-          id="sendBtn"
-          class="send"
-          type="submit"
-        >
-          ➜
-        </button>
+    try {
+      const response = await fetch(
+        `/api/case-status?Case_Id=${encodeURIComponent(caseId)}`
+      );
 
-      </div>
+      const data = await response.json();
 
-    </form>
+      if (!response.ok || !data.success) {
+        caseStatusMessage.textContent =
+          data.message || "Case could not be found.";
 
+        caseStatusMessage.className =
+          "case-status-message error";
 
-    <footer>
+        return;
+      }
 
-      <span>
-        Powered by <strong>MIM AI</strong>
-      </span>
+      caseStatusMessage.textContent =
+        "Case found.";
 
-      <span>
-        AI can escalate sensitive requests to a human.
-      </span>
+      caseStatusMessage.className =
+        "case-status-message success";
 
-    </footer>
+      resultCaseId.textContent =
+        data.Case_Id || caseId;
 
-  </section>
+      resultStatus.textContent =
+        data.case_status || "Unknown";
 
-</main>
+      updateStatusStyle(data.case_status);
 
-<script src="/app.js"></script>
+      resultAssignedTo.textContent =
+        data.assigned_to || "Not assigned";
 
-</body>
-</html>
+      resultAssignedAt.textContent =
+        formatDate(data.assigned_at);
+
+      resultResolvedAt.textContent =
+        formatDate(data.resolved_at);
+
+      resultResolutionNote.textContent =
+        data.resolution_note ||
+        "No resolution note available.";
+
+      caseResult.classList.remove("hidden");
+
+    } catch (error) {
+      caseStatusMessage.textContent =
+        "Unable to check case status right now. Please try again.";
+
+      caseStatusMessage.className =
+        "case-status-message error";
+
+    } finally {
+      caseStatusBtn.disabled = false;
+      caseStatusBtn.textContent = "Check Status";
+    }
+  }
+);
