@@ -1,7 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MIM AI — Customer Support Assistant</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
 
-const form=document.getElementById("chatForm"),messages=document.getElementById("messages"),messageInput=document.getElementById("message"),nameInput=document.getElementById("name"),sendBtn=document.getElementById("sendBtn");
-let sessionId=localStorage.getItem("mim_session_id")||`WEB-${crypto.randomUUID()}`;localStorage.setItem("mim_session_id",sessionId);
-function addMessage(text,type="assistant"){const r=document.createElement("div");r.className=`message ${type}`;const b=document.createElement("div");b.className="bubble";b.textContent=text;r.appendChild(b);messages.appendChild(r);messages.scrollTop=messages.scrollHeight;return r}
-function typing(){const r=document.createElement("div");r.className="message assistant";r.innerHTML='<div class="bubble"><span class="typing"><span></span><span></span><span></span></span></div>';messages.appendChild(r);messages.scrollTop=messages.scrollHeight;return r}
-async function sendMessage(text){const clean=text.trim();if(!clean)return;addMessage(clean,"user");messageInput.value="";sendBtn.disabled=true;const t=typing();try{const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:nameInput.value.trim()||"Website Visitor",channel:"web",message:clean,session_id:sessionId})});const data=await response.json();t.remove();if(!response.ok){addMessage(data.reply||"Support is temporarily unavailable.","system");return}if(data.session_id){sessionId=data.session_id;localStorage.setItem("mim_session_id",sessionId)}addMessage(data.reply||"Thanks — your request has been received.")}catch(e){t.remove();addMessage("I couldn't reach support just now. Please try again.","system")}finally{sendBtn.disabled=false;messageInput.focus()}}
-form.addEventListener("submit",e=>{e.preventDefault();sendMessage(messageInput.value)});document.querySelectorAll("[data-message]").forEach(b=>b.addEventListener("click",()=>sendMessage(b.dataset.message)));
+<main class="shell">
+
+  <section class="hero">
+
+    <div class="brand-row">
+      <div class="logo">M</div>
+
+      <div>
+        <div class="brand">MIM AI</div>
+        <div class="eyebrow">CUSTOMER SUPPORT ASSISTANT</div>
+      </div>
+    </div>
+
+    <h1>
+      Fast answers.<br>
+      <span>Human help when it matters.</span>
+    </h1>
+
+    <p class="hero-copy">
+      A production-minded AI support experience powered by approved knowledge,
+      controlled routing, secure automation, and human escalation.
+    </p>
+
+    <div class="chips">
+      <span>24/7 FAQ support</span>
+      <span>Human escalation</span>
+      <span>Audit logging</span>
+    </div>
+
+
+    <!-- TRACK CASE SECTION -->
+
+    <section class="case-tracker">
+
+      <div class="case-tracker-heading">
+        <span class="case-icon">⌕</span>
+
+        <div>
+          <h2>Track Your Case</h2>
+          <p>Enter your Case ID to check the latest status.</p>
+        </div>
+      </div>
+
+      <form id="caseStatusForm" class="case-form">
+
+        <input
+          id="caseId"
+          type="text"
+          placeholder="Example: MIM-20260811-FASILG"
+          autocomplete="off"
+          required
+        >
+
+        <button id="caseStatusBtn" type="submit">
+          Check Status
+        </button>
+
+      </form>
+
+      <div id="caseStatusMessage" class="case-status-message"></div>
+
+      <div id="caseResult" class="case-result hidden">
+
+        <div class="case-result-top">
+
+          <div>
+            <small>CASE ID</small>
+            <strong id="resultCaseId">—</strong>
+          </div>
+
+          <span id="resultStatus" class="status-badge">
+            —
+          </span>
+
+        </div>
+
+
+        <div class="case-details">
+
+          <div class="case-detail">
+            <small>Assigned To</small>
+            <strong id="resultAssignedTo">—</strong>
+          </div>
+
+          <div class="case-detail">
+            <small>Assigned At</small>
+            <strong id="resultAssignedAt">—</strong>
+          </div>
+
+          <div class="case-detail">
+            <small>Resolved At</small>
+            <strong id="resultResolvedAt">—</strong>
+          </div>
+
+        </div>
+
+
+        <div class="resolution-box">
+          <small>Resolution Note</small>
+          <p id="resultResolutionNote">—</p>
+        </div>
+
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- CHAT -->
+
+  <section class="chat-card">
+
+    <header class="chat-header">
+
+      <div class="avatar">AI</div>
+
+      <div>
+        <strong>MIM Support</strong>
+
+        <small>
+          <i></i>
+          Online
+        </small>
+      </div>
+
+      <div class="secure">
+        Secure demo
+      </div>
+
+    </header>
+
+
+    <div id="messages" class="messages">
+
+      <div class="message assistant">
+        <div class="bubble">
+          Hi! I’m the MIM AI support assistant.
+          Ask me a support question and I’ll either help immediately
+          or route you to a human when needed.
+        </div>
+      </div>
+
+    </div>
+
+
+    <div class="quick-actions">
+
+      <button data-message="What is your return policy?">
+        Return policy
+      </button>
+
+      <button data-message="I want a refund and need to speak to a person.">
+        Refund help
+      </button>
+
+      <button data-message="What are your business hours?">
+        Business hours
+      </button>
+
+    </div>
+
+
+    <form id="chatForm" class="composer">
+
+      <input
+        id="name"
+        maxlength="80"
+        placeholder="Your name (optional)"
+      >
+
+      <div class="input-row">
+
+        <textarea
+          id="message"
+          rows="1"
+          maxlength="4000"
+          placeholder="Type your message..."
+          required
+        ></textarea>
+
+        <button
+          id="sendBtn"
+          class="send"
+          type="submit"
+        >
+          ➜
+        </button>
+
+      </div>
+
+    </form>
+
+
+    <footer>
+
+      <span>
+        Powered by <strong>MIM AI</strong>
+      </span>
+
+      <span>
+        AI can escalate sensitive requests to a human.
+      </span>
+
+    </footer>
+
+  </section>
+
+</main>
+
+<script src="/app.js"></script>
+
+</body>
+</html>
