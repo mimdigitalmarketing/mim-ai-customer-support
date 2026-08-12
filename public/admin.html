@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MIM AI — Support Desk</title>
+  <link rel="stylesheet" href="/admin.css">
+</head>
+
+<body>
+  <div class="admin-shell">
+
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="logo">M</div>
+
+        <div>
+          <div class="brand">MIM AI</div>
+          <div class="eyebrow">SUPPORT DESK</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-filter="all">
+          <span>▦</span>
+          All Cases
+        </button>
+
+        <button class="nav-item" data-filter="Open">
+          <span>○</span>
+          Open
+        </button>
+
+        <button class="nav-item" data-filter="Assigned">
+          <span>◉</span>
+          Assigned
+        </button>
+
+        <button class="nav-item" data-filter="Resolved">
+          <span>✓</span>
+          Resolved
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="agent-dot"></div>
+
+        <div>
+          <strong>Agent Ali</strong>
+          <small>Support Agent</small>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MIM AI CUSTOMER SUPPORT</p>
+          <h1>Support Desk</h1>
+          <p class="subtitle">
+            Review, assign and resolve escalated customer cases.
+          </p>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="live-indicator">
+            <span></span>
+            Live
+          </div>
+
+          <button id="refreshBtn" class="secondary-btn">
+            ↻ Refresh
+          </button>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+
+        <article class="stat-card">
+          <span class="stat-label">Total Cases</span>
+          <strong id="totalCases">0</strong>
+          <small>Latest loaded cases</small>
+        </article>
+
+        <article class="stat-card">
+          <span class="stat-label">Open</span>
+          <strong id="openCases">0</strong>
+          <small>Waiting for assignment</small>
+        </article>
+
+        <article class="stat-card">
+          <span class="stat-label">Assigned</span>
+          <strong id="assignedCases">0</strong>
+          <small>Currently being handled</small>
+        </article>
+
+        <article class="stat-card">
+          <span class="stat-label">Resolved</span>
+          <strong id="resolvedCases">0</strong>
+          <small>Completed cases</small>
+        </article>
+
+      </section>
+
+      <section class="workspace">
+
+        <div class="cases-panel">
+
+          <div class="panel-header">
+            <div>
+              <h2>Cases</h2>
+              <p>Newest escalations appear first.</p>
+            </div>
+
+            <div class="search-wrap">
+              <input
+                id="searchInput"
+                type="search"
+                placeholder="Search Case ID, message or customer..."
+              >
+            </div>
+          </div>
+
+          <div id="loadingState" class="state-box">
+            Loading cases...
+          </div>
+
+          <div id="errorState" class="state-box error hidden">
+            Unable to load cases.
+          </div>
+
+          <div id="emptyState" class="state-box hidden">
+            No cases found.
+          </div>
+
+          <div id="casesList" class="cases-list"></div>
+
+        </div>
+
+        <aside class="details-panel">
+
+          <div id="emptyDetails" class="empty-details">
+            <div class="empty-icon">⌕</div>
+            <h3>Select a case</h3>
+            <p>
+              Choose a case from the list to review its details
+              and take action.
+            </p>
+          </div>
+
+          <div id="caseDetails" class="case-details hidden">
+
+            <div class="details-header">
+              <div>
+                <span class="eyebrow">CASE DETAILS</span>
+                <h2 id="detailCaseId">—</h2>
+              </div>
+
+              <span id="detailStatus" class="status-badge">
+                —
+              </span>
+            </div>
+
+            <div class="detail-section">
+              <label>Customer Message</label>
+              <div id="detailMessage" class="message-box">—</div>
+            </div>
+
+            <div class="detail-grid">
+
+              <div class="detail-card">
+                <span>Customer</span>
+                <strong id="detailCustomer">—</strong>
+              </div>
+
+              <div class="detail-card">
+                <span>Intent</span>
+                <strong id="detailIntent">—</strong>
+              </div>
+
+              <div class="detail-card">
+                <span>Assigned To</span>
+                <strong id="detailAssignedTo">—</strong>
+              </div>
+
+              <div class="detail-card">
+                <span>Created</span>
+                <strong id="detailCreatedAt">—</strong>
+              </div>
+
+            </div>
+
+            <div class="detail-section">
+              <label>AI Escalation Reason</label>
+              <div id="detailReason" class="reason-box">—</div>
+            </div>
+
+            <div class="detail-section">
+              <label for="resolutionNote">
+                Resolution Note
+              </label>
+
+              <textarea
+                id="resolutionNote"
+                rows="4"
+                placeholder="Enter the final action or resolution..."
+              ></textarea>
+            </div>
+
+            <div class="action-row">
+              <button id="assignBtn" class="secondary-btn action-btn">
+                Assign to Me
+              </button>
+
+              <button id="resolveBtn" class="primary-btn action-btn">
+                Resolve Case
+              </button>
+            </div>
+
+            <p id="actionMessage" class="action-message"></p>
+
+          </div>
+
+        </aside>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="/admin.js"></script>
+</body>
+</html>
