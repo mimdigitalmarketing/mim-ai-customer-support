@@ -238,7 +238,9 @@ app.get(
       success: true,
       authenticated: true,
       username:
-        req.session.admin.username
+        req.session.admin.username,
+      name:
+        req.session.admin.name
     });
   }
 );
