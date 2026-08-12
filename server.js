@@ -102,82 +102,104 @@ function safeEqual(a, b) {
 // LOGIN / LOGOUT
 // =====================================================
 
-app.post("/api/admin/login", (req, res) => {
-  const username = String(
-    req.body?.username || ""
-  ).trim();
+app.post("/api/admin/login", async (req, res) => {
+  try {
+    const username = String(
+      req.body?.username || ""
+    ).trim();
 
-  const password = String(
-    req.body?.password || ""
-  );
+    const password = String(
+      req.body?.password || ""
+    );
 
-  const expectedUsername =
-    process.env.ADMIN_USERNAME || "";
-
-  const expectedPassword =
-    process.env.ADMIN_PASSWORD || "";
-
-  if (!expectedUsername || !expectedPassword) {
-    return res.status(500).json({
-      success: false,
-      message:
-        "Admin authentication is not configured."
-    });
-  }
-
-  const usernameValid =
-    safeEqual(username, expectedUsername);
-
-  const passwordValid =
-    safeEqual(password, expectedPassword);
-
-  if (!usernameValid || !passwordValid) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid username or password."
-    });
-  }
-
-  req.session.regenerate(error => {
-    if (error) {
-      console.error(
-        "Session regeneration error:",
-        error
-      );
-
-      return res.status(500).json({
+    if (!username || !password) {
+      return res.status(400).json({
         success: false,
-        message:
-          "Unable to start a secure session."
+        message: "Username and password are required."
       });
     }
 
-    req.session.admin = {
-      authenticated: true,
-      username: expectedUsername,
-      loginAt: new Date().toISOString()
-    };
+    const agent = supportAgents.find(
+      item =>
+        String(item.username || "")
+          .trim()
+          .toLowerCase() ===
+        username.toLowerCase()
+    );
 
-    req.session.save(saveError => {
-      if (saveError) {
+    if (!agent || !agent.passwordHash) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password."
+      });
+    }
+
+    const passwordValid = await bcrypt.compare(
+      password,
+      agent.passwordHash
+    );
+
+    if (!passwordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password."
+      });
+    }
+
+    req.session.regenerate(error => {
+      if (error) {
         console.error(
-          "Session save error:",
-          saveError
+          "Session regeneration error:",
+          error
         );
 
         return res.status(500).json({
           success: false,
           message:
-            "Unable to save the login session."
+            "Unable to start a secure session."
         });
       }
 
-      return res.json({
-        success: true,
-        username: expectedUsername
+      req.session.admin = {
+        authenticated: true,
+        username: agent.username,
+        name: agent.name || agent.username,
+        loginAt: new Date().toISOString()
+      };
+
+      req.session.save(saveError => {
+        if (saveError) {
+          console.error(
+            "Session save error:",
+            saveError
+          );
+
+          return res.status(500).json({
+            success: false,
+            message:
+              "Unable to save the login session."
+          });
+        }
+
+        return res.json({
+          success: true,
+          username: agent.username,
+          name: agent.name || agent.username
+        });
       });
     });
-  });
+  } catch (error) {
+    console.error(
+      "Admin login error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Unable to sign in right now."
+    });
+  }
 });
 
 app.post("/api/admin/logout", (req, res) => {
