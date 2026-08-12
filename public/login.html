@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MIM AI — Admin Login</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f172a;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background:
+        radial-gradient(circle at 20% 15%, rgba(37, 99, 235, 0.22), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.16), transparent 26%),
+        var(--bg);
+
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .login-shell {
+      width: min(940px, 100%);
+      min-height: 560px;
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+
+      background: white;
+      border-radius: 26px;
+      overflow: hidden;
+
+      box-shadow: 0 35px 90px rgba(0, 0, 0, 0.35);
+    }
+
+    .brand-panel {
+      padding: 52px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      color: white;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(37, 99, 235, 0.96),
+          rgba(79, 70, 229, 0.94)
+        );
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 14px;
+
+      background: rgba(255, 255, 255, 0.16);
+
+      font-size: 20px;
+      font-weight: 850;
+    }
+
+    .brand-name {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .eyebrow {
+      margin-top: 3px;
+
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+
+      opacity: 0.72;
+    }
+
+    .brand-copy h1 {
+      font-size: 40px;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+
+      margin-bottom: 18px;
+    }
+
+    .brand-copy p {
+      max-width: 330px;
+
+      line-height: 1.7;
+      font-size: 14px;
+
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .brand-footer {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.62);
+    }
+
+    .form-panel {
+      padding: 52px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-panel h2 {
+      color: var(--text);
+
+      font-size: 30px;
+      letter-spacing: -0.8px;
+    }
+
+    .form-panel > p {
+      margin-top: 8px;
+      margin-bottom: 30px;
+
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-bottom: 17px;
+    }
+
+    .field label {
+      display: block;
+
+      margin-bottom: 7px;
+
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .field input {
+      width: 100%;
+
+      padding: 12px 13px;
+
+      border: 1px solid var(--line);
+      border-radius: 10px;
+
+      outline: none;
+
+      color: var(--text);
+      background: #f8fafc;
+
+      transition: 0.2s ease;
+    }
+
+    .field input:focus {
+      background: white;
+
+      border-color: #93c5fd;
+
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 78px;
+    }
+
+    .show-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+
+      transform: translateY(-50%);
+
+      border: 0;
+      background: transparent;
+
+      color: var(--primary);
+
+      font-size: 11px;
+      font-weight: 750;
+
+      cursor: pointer;
+    }
+
+    .login-btn {
+      width: 100%;
+
+      margin-top: 6px;
+
+      padding: 12px 16px;
+
+      border: 0;
+      border-radius: 10px;
+
+      background: var(--primary);
+      color: white;
+
+      font-weight: 750;
+
+      cursor: pointer;
+
+      transition: 0.2s ease;
+    }
+
+    .login-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .message {
+      min-height: 20px;
+
+      margin-top: 14px;
+
+      font-size: 12px;
+      text-align: center;
+
+      color: var(--muted);
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    .secure-note {
+      margin-top: 26px;
+
+      color: #94a3b8;
+
+      font-size: 11px;
+      line-height: 1.6;
+
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .login-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .brand-panel {
+        padding: 34px;
+        min-height: 290px;
+      }
+
+      .brand-copy h1 {
+        margin-top: 55px;
+        font-size: 34px;
+      }
+
+      .form-panel {
+        padding: 34px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="login-shell">
+
+    <section class="brand-panel">
+      <div class="brand-row">
+        <div class="logo">M</div>
+
+        <div>
+          <div class="brand-name">MIM AI</div>
+          <div class="eyebrow">SUPPORT DESK</div>
+        </div>
+      </div>
+
+      <div class="brand-copy">
+        <h1>Secure access.<br>Human support.</h1>
+
+        <p>
+          Sign in to review escalated customer cases,
+          assign ownership and manage resolutions.
+        </p>
+      </div>
+
+      <div class="brand-footer">
+        MIM AI Customer Support Platform
+      </div>
+    </section>
+
+    <section class="form-panel">
+      <h2>Welcome back</h2>
+
+      <p>
+        Enter your support desk credentials to continue.
+      </p>
+
+      <form id="loginForm">
+
+        <div class="field">
+          <label for="username">Username</label>
+
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            maxlength="80"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+
+          <div class="password-wrap">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              maxlength="200"
+              required
+            >
+
+            <button
+              id="showPasswordBtn"
+              class="show-password"
+              type="button"
+            >
+              Show
+            </button>
+          </div>
+        </div>
+
+        <button
+          id="loginBtn"
+          class="login-btn"
+          type="submit"
+        >
+          Sign In
+        </button>
+
+        <p id="loginMessage" class="message"></p>
+
+      </form>
+
+      <div class="secure-note">
+        Authorized support personnel only.
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMessage = document.getElementById("loginMessage");
+    const showPasswordBtn = document.getElementById("showPasswordBtn");
+
+    showPasswordBtn.addEventListener("click", () => {
+      const showing = password.type === "text";
+
+      password.type = showing ? "password" : "text";
+      showPasswordBtn.textContent = showing ? "Show" : "Hide";
+    });
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      loginMessage.textContent = "";
+      loginMessage.className = "message";
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Signing in...";
+
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify({
+            username: username.value.trim(),
+            password: password.value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          loginMessage.textContent =
+            data.message || "Invalid username or password.";
+
+          loginMessage.className = "message error";
+          return;
+        }
+
+        window.location.href = "/admin";
+      } catch (error) {
+        loginMessage.textContent =
+          "Unable to sign in right now. Please try again.";
+
+        loginMessage.className = "message error";
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Sign In";
+      }
+    });
+  </script>
+</body>
+</html>
