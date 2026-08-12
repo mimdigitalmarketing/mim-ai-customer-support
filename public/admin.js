@@ -1,4 +1,4 @@
-const AGENT_NAME = "Agent Ali";
+let AGENT_NAME = "";
 
 const els = {
   totalCases: document.getElementById("totalCases"),
@@ -31,7 +31,37 @@ const els = {
   resolveBtn: document.getElementById("resolveBtn"),
   actionMessage: document.getElementById("actionMessage")
 };
+async function loadLoggedInAgent() {
+  const response = await fetch("/api/admin/session", {
+    method: "GET",
+    headers: {
+      Accept: "application/json"
+    },
+    cache: "no-store"
+  });
 
+  if (response.status === 401) {
+    window.location.replace("/login.html");
+    return false;
+  }
+
+  const data = await response.json();
+
+  if (!response.ok || !data.authenticated) {
+    window.location.replace("/login.html");
+    return false;
+  }
+
+  AGENT_NAME = data.name || data.username || "Support Agent";
+
+  document
+    .querySelectorAll(".sidebar-footer strong")
+    .forEach(el => {
+      el.textContent = AGENT_NAME;
+    });
+
+  return true;
+}
 let allCases = [];
 let activeFilter = "all";
 let selectedCaseId = null;
@@ -537,9 +567,17 @@ els.resolveBtn.addEventListener("click", resolveSelectedCase);
    INITIAL LOAD
 ========================= */
 
-loadCases({
-  preserveSelection: false
-});
+async function initializeAdminDesk() {
+  const authenticated = await loadLoggedInAgent();
+
+  if (!authenticated) return;
+
+  await loadCases({
+    preserveSelection: false
+  });
+}
+
+initializeAdminDesk();
 // =====================================================
 // ADMIN LOGOUT
 // =====================================================
