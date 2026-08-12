@@ -7,7 +7,24 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+let supportAgents = [];
 
+try {
+  supportAgents = JSON.parse(
+    process.env.SUPPORT_AGENTS_JSON || "[]"
+  );
+
+  if (!Array.isArray(supportAgents)) {
+    throw new Error("SUPPORT_AGENTS_JSON must be an array");
+  }
+} catch (error) {
+  console.error(
+    "Invalid SUPPORT_AGENTS_JSON:",
+    error.message
+  );
+
+  process.exit(1);
+}
 app.set("trust proxy", 1);
 
 app.use(express.json({ limit: "32kb" }));
