@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
 const session = require("express-session");
+const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
 const app = express();
