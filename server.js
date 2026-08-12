@@ -666,84 +666,213 @@ app.post(
       const {
         Case_Id,
         case_status,
-        assigned_to,
         resolution_note
       } = req.body || {};
 
-      const caseId =
-        String(
-          Case_Id || ""
-        ).trim();
+      const caseId = String(
+        Case_Id || ""
+      ).trim();
 
-      const status =
-        String(
-          case_status || ""
-        ).trim();
+      const status = String(
+        case_status || ""
+      ).trim();
 
-      const assignedTo =
-        String(
-          assigned_to || ""
-        ).trim();
+      const resolutionNote = String(
+        resolution_note || ""
+      ).trim();
 
-      const resolutionNote =
-        String(
-          resolution_note || ""
-        ).trim();
+      const loggedInAgent = String(
+        req.session?.admin?.name || ""
+      ).trim();
 
       if (!caseId) {
         return res.status(400).json({
           success: false,
-          message:
-            "Case ID is required."
+          message: "Case ID is required."
+        });
+      }
+
+      if (!loggedInAgent) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required."
         });
       }
 
       const allowedStatuses = [
-        "Open",
         "Assigned",
         "Resolved"
       ];
 
-      if (
-        !allowedStatuses.includes(
-          status
-        )
-      ) {
+      if (!allowedStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
           message:
-            "Invalid case status. Allowed values are Open, Assigned or Resolved."
+            "Only case assignment and resolution are allowed."
         });
       }
 
-      if (
-        (
-          status === "Assigned" ||
-          status === "Resolved"
-        ) &&
-        !assignedTo
-      ) {
-        return res.status(400).json({
+      // =================================================
+      // LOAD CURRENT CASE BEFORE ALLOWING UPDATE
+      // =================================================
+
+      const adminCasesUrl =
+        process.env.N8N_ADMIN_CASES_URL;
+
+      if (!adminCasesUrl) {
+        return res.status(500).json({
           success: false,
           message:
-            "An assigned agent is required for this status."
+            "Admin cases service is not configured yet."
         });
       }
 
-      if (
-        status === "Resolved" &&
-        !resolutionNote
-      ) {
-        return res.status(400).json({
+      const casesResponse = await fetchWithTimeout(
+        adminCasesUrl,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json"
+          }
+        },
+        15000
+      );
+
+      const casesData =
+        await readJsonResponse(casesResponse);
+
+      if (!casesResponse.ok) {
+        return res.status(502).json({
           success: false,
           message:
-            "A resolution note is required before resolving the case."
+            "Unable to verify case ownership right now."
         });
       }
+
+      if (!Array.isArray(casesData)) {
+        return res.status(502).json({
+          success: false,
+          message:
+            "Case service returned an invalid response."
+        });
+      }
+
+      const currentCase = casesData.find(
+        item =>
+          String(item.Case_Id || "").trim() ===
+          caseId
+      );
+
+      if (!currentCase) {
+        return res.status(404).json({
+          success: false,
+          message: "Case not found."
+        });
+      }
+
+      const currentStatus = String(
+        currentCase.case_status || "Open"
+      ).trim();
+
+      const currentAssignedTo = String(
+        currentCase.assigned_to || ""
+      ).trim();
+
+      // =================================================
+      // RULE 1:
+      // OPEN CASE CAN BE CLAIMED BY ANY LOGGED-IN AGENT
+      // =================================================
+
+      if (status === "Assigned") {
+        if (
+          currentStatus === "Assigned" &&
+          currentAssignedTo
+        ) {
+          if (currentAssignedTo === loggedInAgent) {
+            return res.status(409).json({
+              success: false,
+              message:
+                "This case is already assigned to you."
+            });
+          }
+
+          return res.status(403).json({
+            success: false,
+            message:
+              `This case is already assigned to ${currentAssignedTo}.`
+          });
+        }
+
+        if (currentStatus === "Resolved") {
+          return res.status(409).json({
+            success: false,
+            message:
+              "Resolved cases cannot be reassigned."
+          });
+        }
+
+        if (currentStatus !== "Open") {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This case cannot be assigned in its current state."
+          });
+        }
+      }
+
+      // =================================================
+      // RULE 2:
+      // ONLY THE ASSIGNED AGENT CAN RESOLVE THE CASE
+      // =================================================
+
+      if (status === "Resolved") {
+        if (currentStatus === "Resolved") {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This case has already been resolved."
+          });
+        }
+
+        if (currentStatus !== "Assigned") {
+          return res.status(409).json({
+            success: false,
+            message:
+              "The case must be assigned before it can be resolved."
+          });
+        }
+
+        if (!currentAssignedTo) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This case does not have an assigned agent."
+          });
+        }
+
+        if (currentAssignedTo !== loggedInAgent) {
+          return res.status(403).json({
+            success: false,
+            message:
+              `This case belongs to ${currentAssignedTo}.`
+          });
+        }
+
+        if (!resolutionNote) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "A resolution note is required before resolving the case."
+          });
+        }
+      }
+
+      // =================================================
+      // UPDATE THROUGH N8N
+      // =================================================
 
       const updateUrl =
-        process.env
-          .N8N_ADMIN_CASE_UPDATE_URL;
+        process.env.N8N_ADMIN_CASE_UPDATE_URL;
 
       if (!updateUrl) {
         return res.status(500).json({
@@ -753,41 +882,36 @@ app.post(
         });
       }
 
+      const finalAssignedTo =
+        status === "Assigned"
+          ? loggedInAgent
+          : currentAssignedTo;
+
       const payload = {
-        Case_Id:
-          caseId,
-
-        case_status:
-          status,
-
-        assigned_to:
-          assignedTo,
-
+        Case_Id: caseId,
+        case_status: status,
+        assigned_to: finalAssignedTo,
         resolution_note:
-          resolutionNote
+          status === "Resolved"
+            ? resolutionNote
+            : ""
       };
 
-      const response =
-        await fetchWithTimeout(
-          updateUrl,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-              Accept:
-                "application/json"
-            },
-            body:
-              JSON.stringify(payload)
+      const response = await fetchWithTimeout(
+        updateUrl,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
           },
-          15000
-        );
+          body: JSON.stringify(payload)
+        },
+        15000
+      );
 
       const data =
-        await readJsonResponse(
-          response
-        );
+        await readJsonResponse(response);
 
       if (!response.ok) {
         return res.status(502).json({
@@ -801,17 +925,11 @@ app.post(
       }
 
       return res.json({
-        success:
-          data.success !== false,
-
-        Case_Id:
-          data.Case_Id ||
-          caseId,
-
+        success: data.success !== false,
+        Case_Id: data.Case_Id || caseId,
         case_status:
-          data.case_status ||
-          status,
-
+          data.case_status || status,
+        assigned_to: finalAssignedTo,
         message:
           data.message ||
           "Case updated successfully"
@@ -828,34 +946,10 @@ app.post(
 
       return res.status(502).json({
         success: false,
-
-        message:
-          timedOut
-            ? "Case update is taking longer than expected. Please try again."
-            : "Unable to update this case right now."
+        message: timedOut
+          ? "Case update is taking longer than expected. Please try again."
+          : "Unable to update this case right now."
       });
     }
   }
-);
-
-// =====================================================
-// HEALTH CHECK
-// =====================================================
-
-app.get(
-  "/health",
-  (_req, res) =>
-    res.json({
-      ok: true,
-      service:
-        "MIM AI Customer Support Demo"
-    })
-);
-
-app.listen(
-  PORT,
-  () =>
-    console.log(
-      `MIM AI demo running on http://localhost:${PORT}`
-    )
 );
