@@ -540,3 +540,39 @@ els.resolveBtn.addEventListener("click", resolveSelectedCase);
 loadCases({
   preserveSelection: false
 });
+// =====================================================
+// ADMIN LOGOUT
+// =====================================================
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "Logging out...";
+
+      const response = await fetch("/api/admin/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Logout failed.");
+      }
+
+      window.location.replace("/login.html");
+    } catch (error) {
+      console.error("Logout error:", error);
+
+      logoutBtn.disabled = false;
+      logoutBtn.textContent = "Logout";
+
+      alert("Unable to log out. Please try again.");
+    }
+  });
+}
