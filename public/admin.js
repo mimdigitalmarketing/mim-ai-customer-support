@@ -215,24 +215,50 @@ function updateStats() {
   els.resolvedCases.textContent = resolved;
 }
 
-/* =========================
-   FILTERING
-========================= */
-
 function filteredCases() {
-  const query = els.searchInput.value.trim().toLowerCase();
+  const query =
+    els.searchInput.value.trim().toLowerCase();
 
   return allCases.filter(item => {
-    const status = normalizeStatus(item.case_status);
+    const status =
+      normalizeStatus(item.case_status);
 
-    const matchesFilter =
-      activeFilter === "all" ||
-      status.toLowerCase() === activeFilter.toLowerCase();
+    const assignedTo =
+      safeText(item.assigned_to, "")
+        .trim()
+        .toLowerCase();
+
+    const loggedInAgent =
+      AGENT_NAME.trim().toLowerCase();
+
+    let matchesFilter = false;
+
+    // All cases
+    if (activeFilter === "all") {
+      matchesFilter = true;
+    }
+
+    // My Cases:
+    // Show cases assigned to the currently logged-in agent
+    else if (activeFilter === "My Cases") {
+      matchesFilter =
+        assignedTo === loggedInAgent &&
+        assignedTo !== "";
+    }
+
+    // Normal status filters:
+    // Open, Assigned, Resolved
+    else {
+      matchesFilter =
+        status.toLowerCase() ===
+        activeFilter.toLowerCase();
+    }
 
     if (!matchesFilter) {
       return false;
     }
 
+    // No search text = case already matches filter
     if (!query) {
       return true;
     }
