@@ -346,7 +346,9 @@ function clearSelectedCase() {
 }
 
 function selectCase(caseId) {
-  const item = allCases.find(entry => getCaseId(entry) === caseId);
+  const item = allCases.find(
+    entry => getCaseId(entry) === caseId
+  );
 
   if (!item) {
     clearSelectedCase();
@@ -363,7 +365,8 @@ function selectCase(caseId) {
   els.detailCaseId.textContent = caseId;
 
   els.detailStatus.textContent = status;
-  els.detailStatus.className = `status-badge ${statusClass(status)}`;
+  els.detailStatus.className =
+    `status-badge ${statusClass(status)}`;
 
   els.detailMessage.textContent = safeText(
     item.message,
@@ -375,242 +378,131 @@ function selectCase(caseId) {
     "Website Visitor"
   );
 
-  els.detailIntent.textContent = safeText(item.intent, "Unknown");
+  els.detailIntent.textContent = safeText(
+    item.intent,
+    "Unknown"
+  );
 
   els.detailAssignedTo.textContent = safeText(
     item.assigned_to,
     "Not assigned"
   );
 
-  els.detailCreatedAt.textContent = formatDate(getCreatedDate(item));
+  els.detailCreatedAt.textContent =
+    formatDate(getCreatedDate(item));
 
   els.detailReason.textContent = safeText(
     item.reason,
     "No escalation reason recorded."
   );
 
-  els.resolutionNote.value = item.resolution_note || "";
+  els.resolutionNote.value =
+    item.resolution_note || "";
 
-  const isResolved = status.toLowerCase() === "resolved";
+  // =====================================================
+  // AGENT OWNERSHIP UI RULES
+  // =====================================================
+
+  const normalizedStatus =
+    status.toLowerCase();
+
+  const assignedAgent =
+    safeText(item.assigned_to, "").trim();
+
+  const isResolved =
+    normalizedStatus === "resolved";
+
+  const isOpen =
+    normalizedStatus === "open";
+
+  const isAssigned =
+    normalizedStatus === "assigned";
+
   const assignedToMe =
-    safeText(item.assigned_to, "").toLowerCase() ===
-    AGENT_NAME.toLowerCase();
+    Boolean(assignedAgent) &&
+    assignedAgent.toLowerCase() ===
+      AGENT_NAME.trim().toLowerCase();
 
-  els.assignBtn.disabled = isResolved || assignedToMe;
-  els.resolveBtn.disabled = isResolved;
+  const assignedToAnotherAgent =
+    isAssigned &&
+    Boolean(assignedAgent) &&
+    !assignedToMe;
 
-  els.assignBtn.textContent = assignedToMe
-    ? "Assigned to Me"
-    : "Assign to Me";
+  // -----------------------------------------------------
+  // ASSIGN BUTTON
+  // Open case       -> enabled
+  // My case         -> disabled
+  // Other agent     -> disabled
+  // Resolved case   -> disabled
+  // -----------------------------------------------------
 
-  els.resolveBtn.textContent = isResolved
-    ? "Case Resolved"
-    : "Resolve Case";
+  els.assignBtn.disabled =
+    !isOpen;
 
-  setActionMessage();
+  if (assignedToMe) {
+    els.assignBtn.textContent =
+      "Assigned to Me";
+  } else if (assignedToAnotherAgent) {
+    els.assignBtn.textContent =
+      `Assigned to ${assignedAgent}`;
+  } else if (isResolved) {
+    els.assignBtn.textContent =
+      "Case Closed";
+  } else {
+    els.assignBtn.textContent =
+      "Assign to Me";
+  }
+
+  // -----------------------------------------------------
+  // RESOLVE BUTTON
+  // Only logged-in owner can resolve
+  // -----------------------------------------------------
+
+  els.resolveBtn.disabled =
+    isResolved ||
+    !isAssigned ||
+    !assignedToMe;
+
+  if (isResolved) {
+    els.resolveBtn.textContent =
+      "Case Resolved";
+  } else if (assignedToAnotherAgent) {
+    els.resolveBtn.textContent =
+      "Not Your Case";
+  } else if (isOpen) {
+    els.resolveBtn.textContent =
+      "Assign Case First";
+  } else {
+    els.resolveBtn.textContent =
+      "Resolve Case";
+  }
+
+  // -----------------------------------------------------
+  // RESOLUTION NOTE
+  // Only owner of assigned case may edit
+  // -----------------------------------------------------
+
+  els.resolutionNote.disabled =
+    isResolved ||
+    !isAssigned ||
+    !assignedToMe;
+
+  // -----------------------------------------------------
+  // USER MESSAGE
+  // -----------------------------------------------------
+
+  if (assignedToAnotherAgent) {
+    setActionMessage(
+      `This case is assigned to ${assignedAgent}. Only ${assignedAgent} can resolve it.`,
+      "error"
+    );
+  } else if (isOpen) {
+    setActionMessage(
+      "Assign this case to yourself before resolving it."
+    );
+  } else {
+    setActionMessage();
+  }
+
   renderCases();
-}
-
-/* =========================
-   UPDATE CASE
-========================= */
-
-async function updateCase(payload) {
-  const response = await fetch("/api/admin/cases/update", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
-
-  let data = {};
-
-  try {
-    data = await response.json();
-  } catch {
-    data = {};
-  }
-
-  if (!response.ok || data.success === false) {
-    throw new Error(
-      data.message ||
-      data.reply ||
-      `Update failed with status ${response.status}`
-    );
-  }
-
-  return data;
-}
-
-/* =========================
-   ASSIGN CASE
-========================= */
-
-async function assignSelectedCase() {
-  if (!selectedCaseId) return;
-
-  setBusy(true);
-  setActionMessage("Assigning case...");
-
-  try {
-    await updateCase({
-      Case_Id: selectedCaseId,
-      case_status: "Assigned",
-      assigned_to: AGENT_NAME,
-      resolution_note: ""
-    });
-
-    setActionMessage(
-      `Case assigned to ${AGENT_NAME}.`,
-      "success"
-    );
-
-    await loadCases({
-      preserveSelection: true
-    });
-  } catch (error) {
-    console.error("Assign case error:", error);
-
-    setActionMessage(
-      error.message || "Unable to assign case.",
-      "error"
-    );
-  } finally {
-    setBusy(false);
-  }
-}
-
-/* =========================
-   RESOLVE CASE
-========================= */
-
-async function resolveSelectedCase() {
-  if (!selectedCaseId) return;
-
-  const note = els.resolutionNote.value.trim();
-
-  if (!note) {
-    setActionMessage(
-      "Please enter a resolution note before resolving the case.",
-      "error"
-    );
-
-    els.resolutionNote.focus();
-    return;
-  }
-
-  setBusy(true);
-  setActionMessage("Resolving case...");
-
-  try {
-    await updateCase({
-      Case_Id: selectedCaseId,
-      case_status: "Resolved",
-      assigned_to: AGENT_NAME,
-      resolution_note: note
-    });
-
-    setActionMessage(
-      "Case resolved successfully.",
-      "success"
-    );
-
-    await loadCases({
-      preserveSelection: true
-    });
-  } catch (error) {
-    console.error("Resolve case error:", error);
-
-    setActionMessage(
-      error.message || "Unable to resolve case.",
-      "error"
-    );
-  } finally {
-    setBusy(false);
-  }
-}
-
-/* =========================
-   EVENTS
-========================= */
-
-document.querySelectorAll(".nav-item").forEach(button => {
-  button.addEventListener("click", () => {
-    document
-      .querySelectorAll(".nav-item")
-      .forEach(item => item.classList.remove("active"));
-
-    button.classList.add("active");
-
-    activeFilter = button.dataset.filter || "all";
-
-    renderCases();
-  });
-});
-
-els.searchInput.addEventListener("input", () => {
-  renderCases();
-});
-
-els.refreshBtn.addEventListener("click", async () => {
-  await loadCases({
-    preserveSelection: true
-  });
-});
-
-els.assignBtn.addEventListener("click", assignSelectedCase);
-els.resolveBtn.addEventListener("click", resolveSelectedCase);
-
-/* =========================
-   INITIAL LOAD
-========================= */
-
-async function initializeAdminDesk() {
-  const authenticated = await loadLoggedInAgent();
-
-  if (!authenticated) return;
-
-  await loadCases({
-    preserveSelection: false
-  });
-}
-
-initializeAdminDesk();
-// =====================================================
-// ADMIN LOGOUT
-// =====================================================
-
-const logoutBtn = document.getElementById("logoutBtn");
-
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      logoutBtn.disabled = true;
-      logoutBtn.textContent = "Logging out...";
-
-      const response = await fetch("/api/admin/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Logout failed.");
-      }
-
-      window.location.replace("/login.html");
-    } catch (error) {
-      console.error("Logout error:", error);
-
-      logoutBtn.disabled = false;
-      logoutBtn.textContent = "Logout";
-
-      alert("Unable to log out. Please try again.");
-    }
-  });
 }
