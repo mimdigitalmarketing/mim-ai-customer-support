@@ -953,3 +953,25 @@ app.post(
     }
   }
 );
+// =====================================================
+// HEALTH CHECK
+// =====================================================
+
+app.get(
+  "/health",
+  (_req, res) =>
+    res.json({
+      ok: true,
+      service: "MIM AI Customer Support Demo"
+    })
+);
+
+// =====================================================
+// START SERVER
+// =====================================================
+
+app.listen(PORT, () => {
+  console.log(
+    `MIM AI demo running on http://localhost:${PORT}`
+  );
+});
