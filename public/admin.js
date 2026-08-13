@@ -506,3 +506,255 @@ function selectCase(caseId) {
 
   renderCases();
 }
+/* =========================
+   UPDATE CASE
+========================= */
+
+async function updateCase(payload) {
+  const response = await fetch("/api/admin/cases/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  let data = {};
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (response.status === 401) {
+    window.location.replace("/login.html");
+    throw new Error("Your session has expired.");
+  }
+
+  if (!response.ok || data.success === false) {
+    throw new Error(
+      data.message ||
+      data.reply ||
+      `Update failed with status ${response.status}`
+    );
+  }
+
+  return data;
+}
+
+/* =========================
+   ASSIGN CASE
+========================= */
+
+async function assignSelectedCase() {
+  if (!selectedCaseId) return;
+
+  setBusy(true);
+  setActionMessage("Assigning case...");
+
+  try {
+    await updateCase({
+      Case_Id: selectedCaseId,
+      case_status: "Assigned",
+      resolution_note: ""
+    });
+
+    setActionMessage(
+      `Case assigned to ${AGENT_NAME}.`,
+      "success"
+    );
+
+    await loadCases({
+      preserveSelection: true
+    });
+  } catch (error) {
+    console.error("Assign case error:", error);
+
+    setActionMessage(
+      error.message || "Unable to assign case.",
+      "error"
+    );
+  } finally {
+    setBusy(false);
+  }
+}
+
+/* =========================
+   RESOLVE CASE
+========================= */
+
+async function resolveSelectedCase() {
+  if (!selectedCaseId) return;
+
+  const selectedCase = allCases.find(
+    item => getCaseId(item) === selectedCaseId
+  );
+
+  if (!selectedCase) {
+    setActionMessage(
+      "Unable to find the selected case.",
+      "error"
+    );
+    return;
+  }
+
+  const assignedAgent = safeText(
+    selectedCase.assigned_to,
+    ""
+  ).trim();
+
+  const assignedToMe =
+    assignedAgent.toLowerCase() ===
+    AGENT_NAME.trim().toLowerCase();
+
+  if (!assignedToMe) {
+    setActionMessage(
+      assignedAgent
+        ? `This case belongs to ${assignedAgent}.`
+        : "Assign this case to yourself first.",
+      "error"
+    );
+    return;
+  }
+
+  const note = els.resolutionNote.value.trim();
+
+  if (!note) {
+    setActionMessage(
+      "Please enter a resolution note before resolving the case.",
+      "error"
+    );
+
+    els.resolutionNote.focus();
+    return;
+  }
+
+  setBusy(true);
+  setActionMessage("Resolving case...");
+
+  try {
+    await updateCase({
+      Case_Id: selectedCaseId,
+      case_status: "Resolved",
+      resolution_note: note
+    });
+
+    setActionMessage(
+      "Case resolved successfully.",
+      "success"
+    );
+
+    await loadCases({
+      preserveSelection: true
+    });
+  } catch (error) {
+    console.error("Resolve case error:", error);
+
+    setActionMessage(
+      error.message || "Unable to resolve case.",
+      "error"
+    );
+  } finally {
+    setBusy(false);
+  }
+}
+
+/* =========================
+   EVENTS
+========================= */
+
+document.querySelectorAll(".nav-item").forEach(button => {
+  button.addEventListener("click", () => {
+    document
+      .querySelectorAll(".nav-item")
+      .forEach(item => item.classList.remove("active"));
+
+    button.classList.add("active");
+
+    activeFilter = button.dataset.filter || "all";
+
+    renderCases();
+  });
+});
+
+els.searchInput.addEventListener("input", () => {
+  renderCases();
+});
+
+els.refreshBtn.addEventListener("click", async () => {
+  await loadCases({
+    preserveSelection: true
+  });
+});
+
+els.assignBtn.addEventListener(
+  "click",
+  assignSelectedCase
+);
+
+els.resolveBtn.addEventListener(
+  "click",
+  resolveSelectedCase
+);
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
+async function initializeAdminDesk() {
+  const authenticated =
+    await loadLoggedInAgent();
+
+  if (!authenticated) return;
+
+  await loadCases({
+    preserveSelection: false
+  });
+}
+
+initializeAdminDesk();
+
+/* =========================
+   ADMIN LOGOUT
+========================= */
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "Logging out...";
+
+      const response =
+        await fetch("/api/admin/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Logout failed."
+        );
+      }
+
+      window.location.replace("/login.html");
+    } catch (error) {
+      console.error("Logout error:", error);
+
+      logoutBtn.disabled = false;
+      logoutBtn.textContent = "Logout";
+
+      alert(
+        "Unable to log out. Please try again."
+      );
+    }
+  });
+}
