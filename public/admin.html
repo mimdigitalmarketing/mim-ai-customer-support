@@ -35,10 +35,12 @@
           <span>◉</span>
           Assigned
         </button>
+
         <button class="nav-item" data-filter="My Cases">
-        <span>👤</span>
-        My Cases
+          <span>👤</span>
+          My Cases
         </button>
+
         <button class="nav-item" data-filter="Resolved">
           <span>✓</span>
           Resolved
@@ -66,20 +68,20 @@
           </p>
         </div>
 
-      <div class="topbar-actions">
-  <div class="live-indicator">
-    <span></span>
-    Live
-  </div>
+        <div class="topbar-actions">
+          <div class="live-indicator">
+            <span></span>
+            Live
+          </div>
 
-  <button id="refreshBtn" class="secondary-btn">
-    ↻ Refresh
-  </button>
+          <button id="refreshBtn" class="secondary-btn">
+            ↻ Refresh
+          </button>
 
-  <button id="logoutBtn" class="secondary-btn">
-    Logout
-  </button>
-</div>
+          <button id="logoutBtn" class="secondary-btn">
+            Logout
+          </button>
+        </div>
       </header>
 
       <section class="stats-grid">
@@ -226,6 +228,29 @@
             </div>
 
             <p id="actionMessage" class="action-message"></p>
+
+            <div class="detail-section activity-section">
+              <div class="activity-header">
+                <div>
+                  <span class="eyebrow">CASE ACTIVITY</span>
+                  <h3>Activity Timeline</h3>
+                </div>
+              </div>
+
+              <div id="activityLoading" class="activity-state">
+                Loading activity...
+              </div>
+
+              <div id="activityError" class="activity-state error hidden">
+                Unable to load case activity.
+              </div>
+
+              <div id="activityEmpty" class="activity-state hidden">
+                No activity recorded yet.
+              </div>
+
+              <div id="activityTimeline" class="activity-timeline"></div>
+            </div>
 
           </div>
 
