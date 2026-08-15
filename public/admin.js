@@ -645,8 +645,7 @@ async function resolveSelectedCase() {
     return;
   }
 
-  const note =
-    els.resolutionNote.value.trim();
+  const note = els.resolutionNote.value.trim();
 
   if (!note) {
     setActionMessage(
@@ -662,28 +661,18 @@ async function resolveSelectedCase() {
   setActionMessage("Resolving case...");
 
   try {
-    const result = await updateCase({
+    await updateCase({
       Case_Id: selectedCaseId,
       case_status: "Resolved",
       resolution_note: note
     });
 
-    // Immediately update local UI
-    const localCase = allCases.find(
-      item => getCaseId(item) === selectedCaseId
-    );
+    // Update the current case locally.
+    selectedCase.case_status = "Resolved";
+    selectedCase.resolution_note = note;
+    selectedCase.resolved_at = new Date().toISOString();
 
-    if (localCase) {
-      localCase.case_status =
-        result.case_status || "Resolved";
-
-      localCase.resolution_note = note;
-
-      localCase.resolved_at =
-        result.resolved_at ||
-        new Date().toISOString();
-    }
-
+    // Refresh UI only — no API reload.
     updateStats();
     renderCases();
     selectCase(selectedCaseId);
@@ -692,49 +681,11 @@ async function resolveSelectedCase() {
       "Case resolved successfully.",
       "success"
     );
-
-    // Small delay so backend/data source can fully sync
-    await new Promise(resolve =>
-      setTimeout(resolve, 1000)
-    );
-
-    await loadCases({
-      preserveSelection: true
-    });
-
-    // If GET briefly returns stale data,
-    // keep the successful resolved UI state
-    const refreshedCase = allCases.find(
-      item => getCaseId(item) === selectedCaseId
-    );
-
-    if (
-      refreshedCase &&
-      normalizeStatus(
-        refreshedCase.case_status
-      ).toLowerCase() !== "resolved"
-    ) {
-      refreshedCase.case_status = "Resolved";
-      refreshedCase.resolution_note = note;
-
-      updateStats();
-      renderCases();
-      selectCase(selectedCaseId);
-    }
-
-    setActionMessage(
-      "Case resolved successfully.",
-      "success"
-    );
   } catch (error) {
-    console.error(
-      "Resolve case error:",
-      error
-    );
+    console.error("Resolve case error:", error);
 
     setActionMessage(
-      error.message ||
-      "Unable to resolve case.",
+      error.message || "Unable to resolve case.",
       "error"
     );
   } finally {
