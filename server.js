@@ -578,30 +578,46 @@ app.get(
 // =====================================================
 
 app.get(
-  "/api/admin/cases",
+  "/api/admin/cases/:caseId/activity",
   requireAdminApi,
-  async (_req, res) => {
+  async (req, res) => {
     try {
-      const adminCasesUrl =
-        process.env
-          .N8N_ADMIN_CASES_URL;
+      const caseId = String(
+        req.params?.caseId || ""
+      ).trim();
 
-      if (!adminCasesUrl) {
-        return res.status(500).json({
+      if (!caseId) {
+        return res.status(400).json({
           success: false,
-          message:
-            "Admin cases service is not configured yet."
+          message: "Case ID is required."
         });
       }
 
+      const activityUrl =
+        process.env.N8N_CASE_ACTIVITY_URL;
+
+      if (!activityUrl) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "Case activity service is not configured yet."
+        });
+      }
+
+      const url = new URL(activityUrl);
+
+      url.searchParams.set(
+        "Case_Id",
+        caseId
+      );
+
       const response =
         await fetchWithTimeout(
-          adminCasesUrl,
+          url.toString(),
           {
             method: "GET",
             headers: {
-              Accept:
-                "application/json"
+              Accept: "application/json"
             }
           },
           15000
@@ -619,7 +635,7 @@ app.get(
             data.message ||
             data.reply ||
             data.raw ||
-            "Unable to load support cases right now."
+            "Unable to load case activity right now."
         });
       }
 
@@ -627,7 +643,7 @@ app.get(
         return res.status(502).json({
           success: false,
           message:
-            "Admin cases service returned an invalid response."
+            "Case activity service returned an invalid response."
         });
       }
 
@@ -638,17 +654,15 @@ app.get(
         error.name === "AbortError";
 
       console.error(
-        "Admin cases API error:",
+        "Admin case activity API error:",
         error
       );
 
       return res.status(502).json({
         success: false,
-
-        message:
-          timedOut
-            ? "Loading cases is taking longer than expected. Please try again."
-            : "Unable to load support cases right now."
+        message: timedOut
+          ? "Loading case activity is taking longer than expected. Please try again."
+          : "Unable to load case activity right now."
       });
     }
   }
