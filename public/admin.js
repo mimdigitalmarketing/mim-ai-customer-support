@@ -128,9 +128,21 @@ function setActionMessage(message = "", type = "") {
 }
 
 function setBusy(isBusy) {
-  els.assignBtn.disabled = isBusy;
-  els.resolveBtn.disabled = isBusy;
-  els.refreshBtn.disabled = isBusy;
+  if (isBusy) {
+    els.assignBtn.disabled = true;
+    els.resolveBtn.disabled = true;
+    els.refreshBtn.disabled = true;
+    return;
+  }
+
+  els.refreshBtn.disabled = false;
+
+  if (selectedCaseId) {
+    selectCase(selectedCaseId);
+  } else {
+    els.assignBtn.disabled = false;
+    els.resolveBtn.disabled = true;
+  }
 }
 
 /* =========================
