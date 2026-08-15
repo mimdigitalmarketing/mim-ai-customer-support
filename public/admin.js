@@ -645,7 +645,8 @@ async function resolveSelectedCase() {
     return;
   }
 
-  const note = els.resolutionNote.value.trim();
+  const note =
+    els.resolutionNote.value.trim();
 
   if (!note) {
     setActionMessage(
@@ -661,126 +662,82 @@ async function resolveSelectedCase() {
   setActionMessage("Resolving case...");
 
   try {
-    await updateCase({
+    const result = await updateCase({
       Case_Id: selectedCaseId,
       case_status: "Resolved",
       resolution_note: note
     });
+
+    // Immediately update local UI
+    const localCase = allCases.find(
+      item => getCaseId(item) === selectedCaseId
+    );
+
+    if (localCase) {
+      localCase.case_status =
+        result.case_status || "Resolved";
+
+      localCase.resolution_note = note;
+
+      localCase.resolved_at =
+        result.resolved_at ||
+        new Date().toISOString();
+    }
+
+    updateStats();
+    renderCases();
+    selectCase(selectedCaseId);
 
     setActionMessage(
       "Case resolved successfully.",
       "success"
     );
 
+    // Small delay so backend/data source can fully sync
+    await new Promise(resolve =>
+      setTimeout(resolve, 1000)
+    );
+
     await loadCases({
       preserveSelection: true
     });
-  } catch (error) {
-    console.error("Resolve case error:", error);
+
+    // If GET briefly returns stale data,
+    // keep the successful resolved UI state
+    const refreshedCase = allCases.find(
+      item => getCaseId(item) === selectedCaseId
+    );
+
+    if (
+      refreshedCase &&
+      normalizeStatus(
+        refreshedCase.case_status
+      ).toLowerCase() !== "resolved"
+    ) {
+      refreshedCase.case_status = "Resolved";
+      refreshedCase.resolution_note = note;
+
+      updateStats();
+      renderCases();
+      selectCase(selectedCaseId);
+    }
 
     setActionMessage(
-      error.message || "Unable to resolve case.",
+      "Case resolved successfully.",
+      "success"
+    );
+  } catch (error) {
+    console.error(
+      "Resolve case error:",
+      error
+    );
+
+    setActionMessage(
+      error.message ||
+      "Unable to resolve case.",
       "error"
     );
   } finally {
     setBusy(false);
   }
-}
-
-/* =========================
-   EVENTS
-========================= */
-
-document.querySelectorAll(".nav-item").forEach(button => {
-  button.addEventListener("click", () => {
-    document
-      .querySelectorAll(".nav-item")
-      .forEach(item => item.classList.remove("active"));
-
-    button.classList.add("active");
-
-    activeFilter = button.dataset.filter || "all";
-
-    renderCases();
-  });
-});
-
-els.searchInput.addEventListener("input", () => {
-  renderCases();
-});
-
-els.refreshBtn.addEventListener("click", async () => {
-  await loadCases({
-    preserveSelection: true
-  });
-});
-
-els.assignBtn.addEventListener(
-  "click",
-  assignSelectedCase
-);
-
-els.resolveBtn.addEventListener(
-  "click",
-  resolveSelectedCase
-);
-
-/* =========================
-   INITIAL LOAD
-========================= */
-
-async function initializeAdminDesk() {
-  const authenticated =
-    await loadLoggedInAgent();
-
-  if (!authenticated) return;
-
-  await loadCases({
-    preserveSelection: false
-  });
-}
-
-initializeAdminDesk();
-
-/* =========================
-   ADMIN LOGOUT
-========================= */
-
-const logoutBtn =
-  document.getElementById("logoutBtn");
-
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      logoutBtn.disabled = true;
-      logoutBtn.textContent = "Logging out...";
-
-      const response =
-        await fetch("/api/admin/logout", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Logout failed."
-        );
-      }
-
-      window.location.replace("/login.html");
-    } catch (error) {
-      console.error("Logout error:", error);
-
-      logoutBtn.disabled = false;
-      logoutBtn.textContent = "Logout";
-
-      alert(
-        "Unable to log out. Please try again."
-      );
-    }
-  });
 }
