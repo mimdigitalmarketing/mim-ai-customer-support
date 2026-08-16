@@ -40,6 +40,63 @@
       activityEmpty: document.getElementById("activityEmpty"),
       activityTimeline: document.getElementById("activityTimeline")
     };
+      let slaCountdownInterval = null;
+
+function updateSlaCountdown(item) {
+  if (slaCountdownInterval) {
+    clearInterval(slaCountdownInterval);
+    slaCountdownInterval = null;
+  }
+
+  const renderCountdown = () => {
+    const slaStatus = String(item.sla_status || "").toLowerCase();
+
+    // SLA already completed
+    if (slaStatus === "met") {
+      els.detailSlaCountdown.textContent = "SLA met";
+      return;
+    }
+
+    if (slaStatus === "breached") {
+      els.detailSlaCountdown.textContent = "SLA breached";
+      return;
+    }
+
+    // No deadline available
+    if (!item.sla_due_at) {
+      els.detailSlaCountdown.textContent = "Not started";
+      return;
+    }
+
+    const dueTime = new Date(item.sla_due_at).getTime();
+    const now = Date.now();
+    const difference = dueTime - now;
+
+    // Deadline has passed but backend status hasn't updated yet
+    if (difference <= 0) {
+      els.detailSlaCountdown.textContent = "SLA breached";
+      return;
+    }
+
+    const totalSeconds = Math.floor(difference / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    els.detailSlaCountdown.textContent =
+      hours > 0
+        ? `${hours}h ${minutes}m ${seconds}s remaining`
+        : `${minutes}m ${seconds}s remaining`;
+  };
+
+  renderCountdown();
+
+  const slaStatus = String(item.sla_status || "").toLowerCase();
+
+  if (slaStatus !== "met" && slaStatus !== "breached" && item.sla_due_at) {
+    slaCountdownInterval = setInterval(renderCountdown, 1000);
+  }
+}
     async function loadLoggedInAgent() {
       const response = await fetch("/api/admin/session", {
         method: "GET",
@@ -604,9 +661,7 @@ els.detailFirstResponseAt.textContent =
     ? formatDate(item.first_response_at)
     : "Waiting for response";
 
-els.detailSlaCountdown.textContent =
-  "Calculating...";
-
+updateSlaCountdown(item);
       els.detailReason.textContent = safeText(
         item.reason,
         "No escalation reason recorded."
