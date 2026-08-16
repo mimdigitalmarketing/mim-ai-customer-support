@@ -24,6 +24,10 @@
       detailIntent: document.getElementById("detailIntent"),
       detailAssignedTo: document.getElementById("detailAssignedTo"),
       detailCreatedAt: document.getElementById("detailCreatedAt"),
+      detailSlaStatus: document.getElementById("detailSlaStatus"),
+      detailSlaDueAt: document.getElementById("detailSlaDueAt"),
+      detailFirstResponseAt: document.getElementById("detailFirstResponseAt"),
+      detailSlaCountdown: document.getElementById("detailSlaCountdown"),  
       detailReason: document.getElementById("detailReason"),
 
       resolutionNote: document.getElementById("resolutionNote"),
@@ -584,6 +588,24 @@
 
       els.detailCreatedAt.textContent =
         formatDate(getCreatedDate(item));
+        const slaStatus = safeText(
+  item.sla_status,
+  "Pending"
+);
+
+els.detailSlaStatus.textContent =
+  slaStatus;
+
+els.detailSlaDueAt.textContent =
+  formatDate(item.sla_due_at);
+
+els.detailFirstResponseAt.textContent =
+  item.first_response_at
+    ? formatDate(item.first_response_at)
+    : "Waiting for response";
+
+els.detailSlaCountdown.textContent =
+  "Calculating...";
 
       els.detailReason.textContent = safeText(
         item.reason,
