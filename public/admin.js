@@ -1,11 +1,13 @@
 let AGENT_NAME = "";
 
 const els = {
-  totalCases: document.getElementById("totalCases"),
-  openCases: document.getElementById("openCases"),
-  assignedCases: document.getElementById("assignedCases"),
-  resolvedCases: document.getElementById("resolvedCases"),
-  slaCompliance: document.getElementById("slaCompliance"),
+ totalCases: document.getElementById("totalCases"),
+openCases: document.getElementById("openCases"),
+assignedCases: document.getElementById("assignedCases"),
+resolvedCases: document.getElementById("resolvedCases"),
+slaCompliance: document.getElementById("slaCompliance"),
+slaMet: document.getElementById("slaMet"),
+slaBreached: document.getElementById("slaBreached"),
 
   loadingState: document.getElementById("loadingState"),
   errorState: document.getElementById("errorState"),
