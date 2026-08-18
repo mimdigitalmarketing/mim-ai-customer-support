@@ -36,7 +36,12 @@ slaBreached: document.getElementById("slaBreached"),
   resolutionNote: document.getElementById("resolutionNote"),
   assignBtn: document.getElementById("assignBtn"),
   resolveBtn: document.getElementById("resolveBtn"),
-  actionMessage: document.getElementById("actionMessage")
+  actionMessage: document.getElementById("actionMessage"),
+
+  activityLoading: document.getElementById("activityLoading"),
+  activityError: document.getElementById("activityError"),
+  activityEmpty: document.getElementById("activityEmpty"),
+  activityTimeline: document.getElementById("activityTimeline")
 };
 
 let slaCountdownInterval = null;
@@ -204,7 +209,7 @@ function setBusy(isBusy) {
   els.refreshBtn.disabled = false;
 
   if (selectedCaseId) {
-    selectCase(selectedCaseId);
+    selectCase(selectedCaseId, { loadActivity: false });
   } else {
     els.assignBtn.disabled = false;
     els.resolveBtn.disabled = true;
@@ -470,6 +475,156 @@ function renderCases() {
 }
 
 /* =========================
+   CASE ACTIVITY
+========================= */
+
+function resetActivityState() {
+  els.activityLoading.classList.add("hidden");
+  els.activityError.classList.add("hidden");
+  els.activityEmpty.classList.add("hidden");
+  els.activityTimeline.innerHTML = "";
+}
+
+function renderCaseActivity(items) {
+  resetActivityState();
+
+  if (!Array.isArray(items) || !items.length) {
+    els.activityEmpty.classList.remove("hidden");
+    return;
+  }
+
+  items.forEach(activity => {
+    const entry = document.createElement("article");
+    entry.className = "activity-item";
+
+    const marker = document.createElement("div");
+    marker.className = "activity-marker";
+
+    const content = document.createElement("div");
+    content.className = "activity-content";
+
+    const top = document.createElement("div");
+    top.className = "activity-top";
+
+    const title = document.createElement("strong");
+    title.textContent = safeText(
+      activity.activity_type,
+      "Case Activity"
+    );
+
+    const time = document.createElement("span");
+    time.className = "activity-time";
+    time.textContent = formatDate(
+      activity.created_at || activity.createdAt
+    );
+
+    top.appendChild(title);
+    top.appendChild(time);
+
+    const message = document.createElement("p");
+    message.className = "activity-message";
+    message.textContent = safeText(
+      activity.activity_message,
+      "Case activity recorded."
+    );
+
+    const meta = document.createElement("div");
+    meta.className = "activity-meta";
+
+    const performedBy = document.createElement("span");
+    performedBy.textContent =
+      `By: ${safeText(activity.performed_by, "System")}`;
+
+    const statusChange = document.createElement("span");
+    statusChange.textContent =
+      `${safeText(activity.from_status, "—")} → ${safeText(
+        activity.to_status,
+        "—"
+      )}`;
+
+    meta.appendChild(performedBy);
+    meta.appendChild(statusChange);
+
+    content.appendChild(top);
+    content.appendChild(message);
+    content.appendChild(meta);
+
+    const resolutionNote = safeText(
+      activity.resolution_note,
+      ""
+    ).trim();
+
+    if (resolutionNote) {
+      const note = document.createElement("div");
+      note.className = "activity-note";
+      note.textContent = `Resolution: ${resolutionNote}`;
+      content.appendChild(note);
+    }
+
+    entry.appendChild(marker);
+    entry.appendChild(content);
+
+    els.activityTimeline.appendChild(entry);
+  });
+}
+
+async function loadCaseActivity(caseId) {
+  if (!caseId) {
+    resetActivityState();
+    return;
+  }
+
+  resetActivityState();
+  els.activityLoading.classList.remove("hidden");
+
+  try {
+    const response = await fetch(
+      `/api/admin/cases/${encodeURIComponent(caseId)}/activity`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json"
+        },
+        cache: "no-store"
+      }
+    );
+
+    if (response.status === 401) {
+      window.location.replace("/login.html");
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Case activity API returned ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error("Invalid case activity response");
+    }
+
+    // Ignore a late response if another case was selected meanwhile.
+    if (selectedCaseId !== caseId) {
+      return;
+    }
+
+    renderCaseActivity(data);
+  } catch (error) {
+    console.error("Unable to load case activity:", error);
+
+    if (selectedCaseId !== caseId) {
+      return;
+    }
+
+    resetActivityState();
+    els.activityError.classList.remove("hidden");
+  }
+}
+
+/* =========================
    DETAILS
 ========================= */
 
@@ -479,10 +634,11 @@ function clearSelectedCase() {
   els.emptyDetails.classList.remove("hidden");
   els.caseDetails.classList.add("hidden");
 
+  resetActivityState();
   setActionMessage();
 }
 
-function selectCase(caseId) {
+function selectCase(caseId, { loadActivity = true } = {}) {
   const item = allCases.find(
     entry => getCaseId(entry) === caseId
   );
@@ -657,6 +813,10 @@ function selectCase(caseId) {
     );
   } else {
     setActionMessage();
+  }
+
+  if (loadActivity) {
+    loadCaseActivity(caseId);
   }
 
   renderCases();
