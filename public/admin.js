@@ -316,6 +316,14 @@ function updateStats() {
   if (els.slaCompliance) {
     els.slaCompliance.textContent = `${slaCompliance}%`;
   }
+
+  if (els.slaMet) {
+    els.slaMet.textContent = slaMet;
+  }
+
+  if (els.slaBreached) {
+    els.slaBreached.textContent = slaBreached;
+  }
 }
 
 function filteredCases() {
