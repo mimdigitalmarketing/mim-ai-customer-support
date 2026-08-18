@@ -434,16 +434,26 @@
         const data =
           await readJsonResponse(response);
 
-        if (!response.ok) {
-          return res.status(502).json({
-            status: "upstream_error",
-            reply:
-              data.reply ||
-              data.message ||
-              data.raw ||
-              "Support is temporarily unavailable. Please try again shortly."
-          });
-        }
+       if (!response.ok) {
+  if (response.status >= 400 && response.status < 500) {
+    return res.status(response.status).json({
+      status: data.status || "rejected",
+      error: data.error || data.message || "Invalid request",
+      reply:
+        data.reply ||
+        "We could not process your request. Please check your input and try again."
+    });
+  }
+
+  return res.status(502).json({
+    status: "upstream_error",
+    reply:
+      data.reply ||
+      data.message ||
+      data.raw ||
+      "Support is temporarily unavailable. Please try again shortly."
+  });
+}
 
         return res.json({
           status:
