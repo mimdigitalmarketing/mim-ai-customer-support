@@ -362,6 +362,7 @@
           message,
           channel = "web",
           session_id
+          request_id
         } = req.body || {};
 
         if (
@@ -413,6 +414,8 @@
           channel,
           message: message.trim(),
           session_id: finalSessionId
+          request_id:
+          (request_id || "").toString().trim()
         };
 
         const response =
