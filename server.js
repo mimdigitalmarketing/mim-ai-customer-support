@@ -456,7 +456,7 @@
           body:
             JSON.stringify(payload)
         },
-        1000
+        25000
       );
 
     const data =
