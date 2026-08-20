@@ -407,6 +407,10 @@
       session_id ||
       `SESSION-${crypto.randomUUID()}`;
 
+    const finalRequestId =
+      request_id ||
+      `REQ-${crypto.randomUUID()}`;
+
     const payload = {
       customer_id: customerId,
       name:
@@ -414,8 +418,7 @@
       channel,
       message: message.trim(),
       session_id: finalSessionId,
-      request_id:
-        (request_id || "").toString().trim()
+      request_id: finalRequestId
     };
 
     const response =
