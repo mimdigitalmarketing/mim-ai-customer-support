@@ -9,6 +9,10 @@
     const PORT = process.env.PORT || 3000;
     let supportAgents = [];
 
+    // Prevent the same customer + request_id from being processed
+    // concurrently within this running server instance.
+    const inFlightChatRequests = new Set();
+
     try {
       supportAgents = JSON.parse(
         process.env.SUPPORT_AGENTS_JSON || "[]"
@@ -356,6 +360,9 @@
     // =====================================================
 
    app.post("/api/chat", async (req, res) => {
+  let idempotencyKey = "";
+  let acquiredInFlightLock = false;
+
   try {
     const {
       name,
@@ -410,6 +417,21 @@
     const finalRequestId =
       request_id ||
       `REQ-${crypto.randomUUID()}`;
+
+    idempotencyKey =
+      `${customerId}::${finalRequestId}`;
+
+    if (inFlightChatRequests.has(idempotencyKey)) {
+      return res.json({
+        status: "duplicate",
+        reply:
+          "We have already received this request and it is currently being handled.",
+        session_id: finalSessionId
+      });
+    }
+
+    inFlightChatRequests.add(idempotencyKey);
+    acquiredInFlightLock = true;
 
     const payload = {
       customer_id: customerId,
@@ -494,6 +516,10 @@
           ? "Support is taking longer than expected. Please try again."
           : "Something went wrong. Please try again shortly."
     });
+  } finally {
+    if (acquiredInFlightLock && idempotencyKey) {
+      inFlightChatRequests.delete(idempotencyKey);
+    }
   }
 });
 
