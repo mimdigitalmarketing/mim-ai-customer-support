@@ -355,143 +355,144 @@
     // CHAT API
     // =====================================================
 
-    app.post("/api/chat", async (req, res) => {
-      try {
-        const {
-          name,
-          message,
-          channel = "web",
-          session_id
-          request_id
-        } = req.body || {};
+   app.post("/api/chat", async (req, res) => {
+  try {
+    const {
+      name,
+      message,
+      channel = "web",
+      session_id,
+      request_id
+    } = req.body || {};
 
-        if (
-          !message ||
-          typeof message !== "string" ||
-          !message.trim()
-        ) {
-          return res.status(400).json({
-            status: "invalid",
-            reply:
-              "Please enter a message so I can help you."
-          });
-        }
+    if (
+      !message ||
+      typeof message !== "string" ||
+      !message.trim()
+    ) {
+      return res.status(400).json({
+        status: "invalid",
+        reply:
+          "Please enter a message so I can help you."
+      });
+    }
 
-        if (message.length > 4000) {
-          return res.status(400).json({
-            status: "invalid",
-            reply:
-              "Your message is too long. Please shorten it and try again."
-          });
-        }
+    if (message.length > 4000) {
+      return res.status(400).json({
+        status: "invalid",
+        reply:
+          "Your message is too long. Please shorten it and try again."
+      });
+    }
 
-        const webhookUrl =
-          process.env.N8N_WEBHOOK_URL;
+    const webhookUrl =
+      process.env.N8N_WEBHOOK_URL;
 
-        const apiKey =
-          process.env.N8N_API_KEY;
+    const apiKey =
+      process.env.N8N_API_KEY;
 
-        if (!webhookUrl || !apiKey) {
-          return res.status(500).json({
-            status: "configuration_error",
-            reply:
-              "The demo backend is not configured yet."
-          });
-        }
+    if (!webhookUrl || !apiKey) {
+      return res.status(500).json({
+        status: "configuration_error",
+        reply:
+          "The demo backend is not configured yet."
+      });
+    }
 
-        const customerId =
-          req.body.customer_id ||
-          `WEB-${crypto.randomUUID()}`;
+    const customerId =
+      req.body.customer_id ||
+      `WEB-${crypto.randomUUID()}`;
 
-        const finalSessionId =
-          session_id ||
-          `SESSION-${crypto.randomUUID()}`;
+    const finalSessionId =
+      session_id ||
+      `SESSION-${crypto.randomUUID()}`;
 
-        const payload = {
-          customer_id: customerId,
-          name:
-            (name || "Website Visitor").trim(),
-          channel,
-          message: message.trim(),
-          session_id: finalSessionId
-          request_id:
-          (request_id || "").toString().trim()
-        };
+    const payload = {
+      customer_id: customerId,
+      name:
+        (name || "Website Visitor").trim(),
+      channel,
+      message: message.trim(),
+      session_id: finalSessionId,
+      request_id:
+        (request_id || "").toString().trim()
+    };
 
-        const response =
-          await fetchWithTimeout(
-            webhookUrl,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-                "X-API-Key": apiKey
-              },
-              body:
-                JSON.stringify(payload)
-            },
-            25000
-          );
+    const response =
+      await fetchWithTimeout(
+        webhookUrl,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            "X-API-Key": apiKey
+          },
+          body:
+            JSON.stringify(payload)
+        },
+        25000
+      );
 
-        const data =
-          await readJsonResponse(response);
+    const data =
+      await readJsonResponse(response);
 
-       if (!response.ok) {
-  if (response.status >= 400 && response.status < 500) {
-    return res.status(response.status).json({
-      status: data.status || "rejected",
-      error: data.error || data.message || "Invalid request",
-      reply:
-        data.reply ||
-        "We could not process your request. Please check your input and try again."
-    });
-  }
-
-  return res.status(502).json({
-    status: "upstream_error",
-    reply:
-      data.reply ||
-      data.message ||
-      data.raw ||
-      "Support is temporarily unavailable. Please try again shortly."
-  });
-}
-
-        return res.json({
-          status:
-            data.status || "ok",
-
+    if (!response.ok) {
+      if (response.status >= 400 && response.status < 500) {
+        return res.status(response.status).json({
+          status: data.status || "rejected",
+          error: data.error || data.message || "Invalid request",
           reply:
             data.reply ||
-            "Thanks — your request has been received.",
-
-          session_id:
-            finalSessionId
-        });
-      } catch (error) {
-        const timedOut =
-          error &&
-          error.name === "AbortError";
-
-        console.error(
-          "Chat API error:",
-          error
-        );
-
-        return res.status(502).json({
-          status:
-            timedOut
-              ? "timeout"
-              : "error",
-
-          reply:
-            timedOut
-              ? "Support is taking longer than expected. Please try again."
-              : "Something went wrong. Please try again shortly."
+            "We could not process your request. Please check your input and try again."
         });
       }
+
+      return res.status(502).json({
+        status: "upstream_error",
+        reply:
+          data.reply ||
+          data.message ||
+          data.raw ||
+          "Support is temporarily unavailable. Please try again shortly."
+      });
+    }
+
+    return res.json({
+      status:
+        data.status || "ok",
+
+      reply:
+        data.reply ||
+        "Thanks — your request has been received.",
+
+      session_id:
+        finalSessionId
     });
+
+  } catch (error) {
+    const timedOut =
+      error &&
+      error.name === "AbortError";
+
+    console.error(
+      "Chat API error:",
+      error
+    );
+
+    return res.status(502).json({
+      status:
+        timedOut
+          ? "timeout"
+          : "error",
+
+      reply:
+        timedOut
+          ? "Support is taking longer than expected. Please try again."
+          : "Something went wrong. Please try again shortly."
+    });
+  }
+});
 
     // =====================================================
     // CASE STATUS API
