@@ -46,6 +46,24 @@ slaBreached: document.getElementById("slaBreached"),
 
 let slaCountdownInterval = null;
 
+function parseApiDate(value) {
+  if (!value) return null;
+
+  const text = String(value).trim();
+  const hasExplicitTimezone =
+    /(?:Z|[+-]\d{2}:\d{2})$/i.test(text);
+
+  const normalized = hasExplicitTimezone
+    ? text
+    : `${text.replace(" ", "T")}Z`;
+
+  const date = new Date(normalized);
+
+  return Number.isNaN(date.getTime())
+    ? null
+    : date;
+}
+
 function updateSlaCountdown(item) {
   if (slaCountdownInterval) {
     clearInterval(slaCountdownInterval);
@@ -70,7 +88,14 @@ function updateSlaCountdown(item) {
       return;
     }
 
-    const dueTime = new Date(item.sla_due_at).getTime();
+    const dueDate = parseApiDate(item.sla_due_at);
+
+    if (!dueDate) {
+      els.detailSlaCountdown.textContent = "Invalid SLA time";
+      return;
+    }
+
+    const dueTime = dueDate.getTime();
     const difference = dueTime - Date.now();
 
     if (difference <= 0) {
@@ -166,9 +191,9 @@ function statusClass(status) {
 function formatDate(value) {
   if (!value) return "—";
 
-  const date = new Date(value);
+  const date = parseApiDate(value);
 
-  if (Number.isNaN(date.getTime())) {
+  if (!date) {
     return safeText(value);
   }
 
