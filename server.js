@@ -1177,8 +1177,6 @@ app.post(
     // START SERVER
     // =====================================================
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(
-        `MIM AI demo running on http://localhost:${PORT}`
-      );
-    });
+   app.listen(PORT, "0.0.0.0", () => {
+  console.log(`MIM AI demo running on port ${PORT}`);
+});
