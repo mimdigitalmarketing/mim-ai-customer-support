@@ -793,305 +793,364 @@ console.log("n8n response:", data);
       }
     );
 
-    // =====================================================
-    // ADMIN — UPDATE CASE
-    // =====================================================
+   // =====================================================
+// ADMIN — UPDATE CASE
+// =====================================================
 
-    app.post(
-      "/api/admin/cases/update",
-      requireAdminApi,
-      async (req, res) => {
-        try {
-          const {
-            Case_Id,
-            case_status,
-            resolution_note
-          } = req.body || {};
+app.post(
+  "/api/admin/cases/update",
+  requireAdminApi,
+  async (req, res) => {
+    try {
+      const {
+        Case_Id,
+        case_status,
+        resolution_note
+      } = req.body || {};
 
-          const caseId = String(
-            Case_Id || ""
-          ).trim();
+      const caseId = String(
+        Case_Id || ""
+      ).trim();
 
-          const status = String(
-            case_status || ""
-          ).trim();
+      const status = String(
+        case_status || ""
+      ).trim();
 
-          const resolutionNote = String(
-            resolution_note || ""
-          ).trim();
+      const resolutionNote = String(
+        resolution_note || ""
+      ).trim();
 
-          const loggedInAgent = String(
-            req.session?.admin?.name || ""
-          ).trim();
+      const loggedInAgent = String(
+        req.session?.admin?.name || ""
+      ).trim();
 
-          if (!caseId) {
-            return res.status(400).json({
-              success: false,
-              message: "Case ID is required."
-            });
-          }
+      if (!caseId) {
+        return res.status(400).json({
+          success: false,
+          message: "Case ID is required."
+        });
+      }
 
-          if (!loggedInAgent) {
-            return res.status(401).json({
-              success: false,
-              message: "Authentication required."
-            });
-          }
+      if (!loggedInAgent) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required."
+        });
+      }
 
-          const allowedStatuses = [
-            "Assigned",
-            "Resolved"
-          ];
+      const allowedStatuses = [
+        "Assigned",
+        "Resolved"
+      ];
 
-          if (!allowedStatuses.includes(status)) {
-            return res.status(400).json({
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Only case assignment and resolution are allowed."
+        });
+      }
+
+      // =================================================
+      // LOAD CURRENT CASE
+      // =================================================
+
+      const adminCasesUrl =
+        process.env.N8N_ADMIN_CASES_URL;
+
+      if (!adminCasesUrl) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "Admin cases service is not configured yet."
+        });
+      }
+
+      const casesResponse =
+        await fetchWithTimeout(
+          adminCasesUrl,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json"
+            }
+          },
+          15000
+        );
+
+      const casesData =
+        await readJsonResponse(
+          casesResponse
+        );
+
+      if (!casesResponse.ok) {
+        return res.status(502).json({
+          success: false,
+          message:
+            "Unable to verify case ownership right now."
+        });
+      }
+
+      if (!Array.isArray(casesData)) {
+        return res.status(502).json({
+          success: false,
+          message:
+            "Case service returned an invalid response."
+        });
+      }
+
+      const currentCase =
+        casesData.find(
+          item =>
+            String(
+              item.Case_Id || ""
+            ).trim() === caseId
+        );
+
+      if (!currentCase) {
+        return res.status(404).json({
+          success: false,
+          message: "Case not found."
+        });
+      }
+
+      // =================================================
+      // NORMALIZE STATUS
+      // =================================================
+
+      const currentStatus =
+        String(
+          currentCase.case_status || "Open"
+        ).trim();
+
+      const currentStatusNormalized =
+        currentStatus.toLowerCase();
+
+      const requestedStatusNormalized =
+        status.toLowerCase();
+
+      const currentAssignedTo =
+        String(
+          currentCase.assigned_to || ""
+        ).trim();
+
+      // =================================================
+      // RULE 1:
+      // OPEN CASE CAN BE CLAIMED
+      // =================================================
+
+      if (
+        requestedStatusNormalized ===
+        "assigned"
+      ) {
+        if (
+          currentStatusNormalized ===
+            "assigned" &&
+          currentAssignedTo
+        ) {
+          if (
+            currentAssignedTo ===
+            loggedInAgent
+          ) {
+            return res.status(409).json({
               success: false,
               message:
-                "Only case assignment and resolution are allowed."
+                "This case is already assigned to you."
             });
           }
 
-          // =================================================
-          // LOAD CURRENT CASE BEFORE ALLOWING UPDATE
-          // =================================================
-
-          const adminCasesUrl =
-            process.env.N8N_ADMIN_CASES_URL;
-
-          if (!adminCasesUrl) {
-            return res.status(500).json({
-              success: false,
-              message:
-                "Admin cases service is not configured yet."
-            });
-          }
-
-          const casesResponse = await fetchWithTimeout(
-            adminCasesUrl,
-            {
-              method: "GET",
-              headers: {
-                Accept: "application/json"
-              }
-            },
-            15000
-          );
-
-          const casesData =
-            await readJsonResponse(casesResponse);
-
-          if (!casesResponse.ok) {
-            return res.status(502).json({
-              success: false,
-              message:
-                "Unable to verify case ownership right now."
-            });
-          }
-
-          if (!Array.isArray(casesData)) {
-            return res.status(502).json({
-              success: false,
-              message:
-                "Case service returned an invalid response."
-            });
-          }
-
-          const currentCase = casesData.find(
-            item =>
-              String(item.Case_Id || "").trim() ===
-              caseId
-          );
-
-          if (!currentCase) {
-            return res.status(404).json({
-              success: false,
-              message: "Case not found."
-            });
-          }
-
-          const currentStatus = String(
-            currentCase.case_status || "Open"
-          ).trim();
-
-          const currentAssignedTo = String(
-            currentCase.assigned_to || ""
-          ).trim();
-
-          // =================================================
-          // RULE 1:
-          // OPEN CASE CAN BE CLAIMED BY ANY LOGGED-IN AGENT
-          // =================================================
-
-          if (status === "Assigned") {
-            if (
-              currentStatus === "Assigned" &&
-              currentAssignedTo
-            ) {
-              if (currentAssignedTo === loggedInAgent) {
-                return res.status(409).json({
-                  success: false,
-                  message:
-                    "This case is already assigned to you."
-                });
-              }
-
-              return res.status(403).json({
-                success: false,
-                message:
-                  `This case is already assigned to ${currentAssignedTo}.`
-              });
-            }
-
-            if (currentStatus === "Resolved") {
-              return res.status(409).json({
-                success: false,
-                message:
-                  "Resolved cases cannot be reassigned."
-              });
-            }
-
-            if (currentStatus !== "Open") {
-              return res.status(409).json({
-                success: false,
-                message:
-                  "This case cannot be assigned in its current state."
-              });
-            }
-          }
-
-          // =================================================
-          // RULE 2:
-          // ONLY THE ASSIGNED AGENT CAN RESOLVE THE CASE
-          // =================================================
-
-          if (status === "Resolved") {
-            if (currentStatus === "Resolved") {
-              return res.status(409).json({
-                success: false,
-                message:
-                  "This case has already been resolved."
-              });
-            }
-
-            if (currentStatus !== "Assigned") {
-              return res.status(409).json({
-                success: false,
-                message:
-                  "The case must be assigned before it can be resolved."
-              });
-            }
-
-            if (!currentAssignedTo) {
-              return res.status(409).json({
-                success: false,
-                message:
-                  "This case does not have an assigned agent."
-              });
-            }
-
-            if (currentAssignedTo !== loggedInAgent) {
-              return res.status(403).json({
-                success: false,
-                message:
-                  `This case belongs to ${currentAssignedTo}.`
-              });
-            }
-
-            if (!resolutionNote) {
-              return res.status(400).json({
-                success: false,
-                message:
-                  "A resolution note is required before resolving the case."
-              });
-            }
-          }
-
-          // =================================================
-          // UPDATE THROUGH N8N
-          // =================================================
-
-          const updateUrl =
-            process.env.N8N_ADMIN_CASE_UPDATE_URL;
-
-          if (!updateUrl) {
-            return res.status(500).json({
-              success: false,
-              message:
-                "Admin case update service is not configured yet."
-            });
-          }
-
-          const finalAssignedTo =
-            status === "Assigned"
-              ? loggedInAgent
-              : currentAssignedTo;
-
-          const payload = {
-            Case_Id: caseId,
-            case_status: status,
-            assigned_to: finalAssignedTo,
-            resolution_note:
-              status === "Resolved"
-                ? resolutionNote
-                : ""
-          };
-
-          const response = await fetchWithTimeout(
-            updateUrl,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json"
-              },
-              body: JSON.stringify(payload)
-            },
-            15000
-          );
-
-          const data =
-            await readJsonResponse(response);
-
-          if (!response.ok) {
-            return res.status(502).json({
-              success: false,
-              message:
-                data.message ||
-                data.reply ||
-                data.raw ||
-                "Unable to update this case right now."
-            });
-          }
-
-          return res.json({
-            success: data.success !== false,
-            Case_Id: data.Case_Id || caseId,
-            case_status:
-              data.case_status || status,
-            assigned_to: finalAssignedTo,
-            message:
-              data.message ||
-              "Case updated successfully"
-          });
-        } catch (error) {
-          const timedOut =
-            error &&
-            error.name === "AbortError";
-
-          console.error(
-            "Admin update API error:",
-            error
-          );
-
-          return res.status(502).json({
+          return res.status(403).json({
             success: false,
-            message: timedOut
-              ? "Case update is taking longer than expected. Please try again."
-              : "Unable to update this case right now."
+            message:
+              `This case is already assigned to ${currentAssignedTo}.`
+          });
+        }
+
+        if (
+          currentStatusNormalized ===
+          "resolved"
+        ) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "Resolved cases cannot be reassigned."
+          });
+        }
+
+        if (
+          currentStatusNormalized !==
+          "open"
+        ) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This case cannot be assigned in its current state."
           });
         }
       }
-    );
+
+      // =================================================
+      // RULE 2:
+      // ONLY ASSIGNED AGENT CAN RESOLVE
+      // =================================================
+
+      if (
+        requestedStatusNormalized ===
+        "resolved"
+      ) {
+        if (
+          currentStatusNormalized ===
+          "resolved"
+        ) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This case has already been resolved."
+          });
+        }
+
+        if (
+          currentStatusNormalized !==
+          "assigned"
+        ) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "The case must be assigned before it can be resolved."
+          });
+        }
+
+        if (!currentAssignedTo) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This case does not have an assigned agent."
+          });
+        }
+
+        if (
+          currentAssignedTo !==
+          loggedInAgent
+        ) {
+          return res.status(403).json({
+            success: false,
+            message:
+              `This case belongs to ${currentAssignedTo}.`
+          });
+        }
+
+        if (!resolutionNote) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "A resolution note is required before resolving the case."
+          });
+        }
+      }
+
+      // =================================================
+      // UPDATE THROUGH N8N
+      // =================================================
+
+      const updateUrl =
+        process.env.N8N_ADMIN_CASE_UPDATE_URL;
+
+      if (!updateUrl) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "Admin case update service is not configured yet."
+        });
+      }
+
+      const finalAssignedTo =
+        requestedStatusNormalized ===
+        "assigned"
+          ? loggedInAgent
+          : currentAssignedTo;
+
+      const payload = {
+        Case_Id: caseId,
+        case_status: status,
+        assigned_to: finalAssignedTo,
+        resolution_note:
+          requestedStatusNormalized ===
+          "resolved"
+            ? resolutionNote
+            : ""
+      };
+
+      const response =
+        await fetchWithTimeout(
+          updateUrl,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Accept:
+                "application/json"
+            },
+            body:
+              JSON.stringify(payload)
+          },
+          15000
+        );
+
+      const data =
+        await readJsonResponse(
+          response
+        );
+
+      if (!response.ok) {
+        return res.status(502).json({
+          success: false,
+          message:
+            data.message ||
+            data.reply ||
+            data.raw ||
+            "Unable to update this case right now."
+        });
+      }
+
+      return res.json({
+        success:
+          data.success !== false,
+
+        Case_Id:
+          data.Case_Id || caseId,
+
+        case_status:
+          data.case_status || status,
+
+        assigned_to:
+          finalAssignedTo,
+
+        message:
+          data.message ||
+          "Case updated successfully"
+      });
+
+    } catch (error) {
+      const timedOut =
+        error &&
+        error.name === "AbortError";
+
+      console.error(
+        "Admin update API error:",
+        error
+      );
+
+      return res.status(502).json({
+        success: false,
+        message:
+          timedOut
+            ? "Case update is taking longer than expected. Please try again."
+            : "Unable to update this case right now."
+      });
+    }
+  }
+);
     // =====================================================
     // HEALTH CHECK
     // =====================================================
