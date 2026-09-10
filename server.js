@@ -396,7 +396,7 @@
       process.env.N8N_WEBHOOK_URL;
 
     const apiKey =
-      process.env.N8N_API_KEY;
+  (process.env.N8N_API_KEY || "").trim();
 
     if (!webhookUrl || !apiKey) {
       return res.status(500).json({
