@@ -461,6 +461,8 @@
 
     const data =
       await readJsonResponse(response);
+      console.log("n8n response status:", response.status);
+console.log("n8n response:", data);
 
     if (!response.ok) {
       if (response.status >= 400 && response.status < 500) {
