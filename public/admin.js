@@ -148,7 +148,13 @@ async function loadLoggedInAgent() {
     return false;
   }
 
-  AGENT_NAME = data.name || data.username || "Support Agent";
+  AGENT_NAME = String(
+    data.name || data.username || "Support Agent"
+  ).trim();
+
+  if (!AGENT_NAME) {
+    throw new Error("Unable to determine the logged-in support agent.");
+  }
 
   document
     .querySelectorAll(".sidebar-footer strong")
@@ -898,6 +904,7 @@ async function assignSelectedCase() {
     await updateCase({
       Case_Id: selectedCaseId,
       case_status: "Assigned",
+      assigned_to: AGENT_NAME,
       resolution_note: ""
     });
 
@@ -978,6 +985,7 @@ async function resolveSelectedCase() {
     await updateCase({
       Case_Id: selectedCaseId,
       case_status: "Resolved",
+      assigned_to: AGENT_NAME,
       resolution_note: note
     });
 
