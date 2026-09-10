@@ -1085,12 +1085,11 @@ app.post(
           updateUrl,
           {
             method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-              Accept:
-                "application/json"
-            },
+           headers: {
+          "Content-Type": "application/json",
+           Accept: "application/json",
+          "X-API-Key": (process.env.N8N_API_KEY || "").trim()
+          },
             body:
               JSON.stringify(payload)
           },
