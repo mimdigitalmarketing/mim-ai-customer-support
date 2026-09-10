@@ -460,11 +460,21 @@
       );
 
     const data =
-      await readJsonResponse(response);
-      console.log("n8n response status:", response.status);
-console.log("n8n response:", data);
+  await readJsonResponse(
+    response
+  );
 
-    if (!response.ok) {
+console.log(
+  "ADMIN UPDATE n8n status:",
+  response.status
+);
+
+console.log(
+  "ADMIN UPDATE n8n response:",
+  data
+);
+
+if (!response.ok) {
       if (response.status >= 400 && response.status < 500) {
         return res.status(response.status).json({
           status: data.status || "rejected",
