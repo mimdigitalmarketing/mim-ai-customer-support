@@ -712,6 +712,3 @@ footer{
     grid-template-columns: 1fr;
   }
 }
-.how-it-works {
-  grid-column: 1 / -1;
-}
