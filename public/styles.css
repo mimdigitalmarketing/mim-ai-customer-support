@@ -622,3 +622,32 @@ footer{
   }
 
 }
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.cta-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.cta-primary:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.hero-cta > span {
+  font-size: 13px;
+  opacity: 0.65;
+}
