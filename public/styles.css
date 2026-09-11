@@ -712,3 +712,12 @@ footer{
     grid-template-columns: 1fr;
   }
 }
+.chat-card {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.how-it-works {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
