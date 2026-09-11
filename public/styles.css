@@ -12,6 +12,10 @@
   box-sizing:border-box;
 }
 
+html{
+  scroll-behavior:smooth;
+}
+
 body{
   margin:0;
   min-height:100vh;
@@ -37,19 +41,28 @@ textarea{
   font:inherit;
 }
 
+
+/* ================================================= */
+/* MAIN LAYOUT */
+/* ================================================= */
+
 .shell{
   width:min(1180px,92vw);
   min-height:100vh;
   margin:auto;
+
   display:grid;
   grid-template-columns:1fr .92fr;
   gap:64px;
+
   align-items:center;
   padding:56px 0;
 }
 
 
+/* ================================================= */
 /* BRAND */
+/* ================================================= */
 
 .brand-row{
   display:flex;
@@ -62,16 +75,20 @@ textarea{
   width:50px;
   height:50px;
   border-radius:16px;
+
   display:grid;
   place-items:center;
+
   font-weight:900;
   font-size:22px;
+
   background:
     linear-gradient(
       135deg,
       var(--accent2),
       var(--accent)
     );
+
   color:#06111c;
 }
 
@@ -87,7 +104,9 @@ textarea{
 }
 
 
+/* ================================================= */
 /* HERO */
+/* ================================================= */
 
 h1{
   font-size:clamp(48px,6vw,78px);
@@ -125,22 +144,66 @@ h1 span{
 }
 
 
-/* ------------------------------------------------ */
+/* ================================================= */
+/* HERO CTA */
+/* ================================================= */
+
+.hero-cta{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:22px;
+  flex-wrap:wrap;
+}
+
+.cta-primary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:12px 18px;
+  border-radius:10px;
+
+  text-decoration:none;
+  font-weight:700;
+  font-size:14px;
+
+  transition:
+    transform .2s ease,
+    opacity .2s ease;
+}
+
+.cta-primary:hover{
+  transform:translateY(-1px);
+  opacity:.9;
+}
+
+.hero-cta > span{
+  font-size:13px;
+  opacity:.65;
+}
+
+
+/* ================================================= */
 /* CASE TRACKER */
-/* ------------------------------------------------ */
+/* ================================================= */
 
 .case-tracker{
   margin-top:34px;
   max-width:610px;
+
   padding:22px;
+
   border-radius:22px;
   border:1px solid var(--line);
+
   background:
     linear-gradient(
       180deg,
       rgba(16,31,53,.78),
       rgba(9,23,40,.88)
     );
+
   box-shadow:
     0 18px 45px rgba(0,0,0,.18);
 }
@@ -155,12 +218,17 @@ h1 span{
 .case-icon{
   width:42px;
   height:42px;
+
   display:grid;
   place-items:center;
+
   border-radius:13px;
+
   background:rgba(98,168,255,.12);
   color:var(--accent2);
+
   border:1px solid rgba(98,168,255,.25);
+
   font-size:22px;
 }
 
@@ -183,17 +251,20 @@ h1 span{
 .case-form input{
   flex:1;
   min-width:0;
+
   border:1px solid var(--line);
   background:#091728;
   color:var(--text);
+
   outline:none;
   border-radius:14px;
+
   padding:12px 14px;
 }
 
 .case-form input:focus{
-  border-color:
-    rgba(98,168,255,.55);
+  border-color:rgba(98,168,255,.55);
+
   box-shadow:
     0 0 0 3px rgba(98,168,255,.09);
 }
@@ -201,9 +272,12 @@ h1 span{
 .case-form button{
   border:0;
   border-radius:14px;
+
   padding:12px 16px;
+
   background:var(--accent);
   color:#06111c;
+
   font-weight:800;
   cursor:pointer;
   white-space:nowrap;
@@ -221,6 +295,7 @@ h1 span{
 .case-status-message{
   min-height:18px;
   margin-top:10px;
+
   font-size:12px;
   color:var(--muted);
 }
@@ -239,9 +314,12 @@ h1 span{
 
 .case-result{
   margin-top:15px;
+
   padding:16px;
+
   border-radius:18px;
   border:1px solid var(--line);
+
   background:rgba(255,255,255,.025);
 }
 
@@ -253,7 +331,9 @@ h1 span{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
+
   gap:14px;
+
   padding-bottom:14px;
   border-bottom:1px solid var(--line);
 }
@@ -262,9 +342,11 @@ h1 span{
 .case-detail small,
 .resolution-box small{
   display:block;
+
   font-size:9px;
   letter-spacing:.12em;
   color:#7890aa;
+
   margin-bottom:5px;
 }
 
@@ -274,87 +356,108 @@ h1 span{
 
 .status-badge{
   display:inline-flex;
+
   padding:7px 10px;
+
   border-radius:999px;
+
   font-size:11px;
   font-weight:800;
 }
 
 .status-resolved{
   color:#63e0be;
+
   background:
     rgba(66,214,178,.11);
+
   border:
     1px solid rgba(66,214,178,.25);
 }
 
 .status-open{
   color:#78b5ff;
+
   background:
     rgba(98,168,255,.1);
+
   border:
     1px solid rgba(98,168,255,.25);
 }
 
 .status-progress{
   color:#ffd37d;
+
   background:
     rgba(255,193,79,.09);
+
   border:
     1px solid rgba(255,193,79,.22);
 }
 
 .status-default{
   color:#c5d2e2;
+
   background:
     rgba(255,255,255,.04);
+
   border:
     1px solid var(--line);
 }
 
 .case-details{
   display:grid;
-  grid-template-columns:
-    repeat(3,1fr);
+  grid-template-columns:repeat(3,1fr);
+
   gap:12px;
   margin-top:14px;
 }
 
 .case-detail{
   background:#091728;
+
   border:1px solid var(--line);
   border-radius:13px;
+
   padding:11px;
 }
 
 .case-detail strong{
   display:block;
+
   font-size:11px;
   line-height:1.5;
+
   word-break:break-word;
 }
 
 .resolution-box{
   margin-top:12px;
+
   padding:12px;
+
   background:
     rgba(66,214,178,.045);
+
   border:
     1px solid rgba(66,214,178,.13);
+
   border-radius:13px;
 }
 
 .resolution-box p{
   margin:0;
+
   color:#cbd8e7;
+
   font-size:12px;
   line-height:1.6;
 }
 
 
-/* ------------------------------------------------ */
+/* ================================================= */
 /* CHAT */
-/* ------------------------------------------------ */
+/* ================================================= */
 
 .chat-card{
   background:
@@ -363,12 +466,17 @@ h1 span{
       rgba(16,31,53,.96),
       rgba(10,21,37,.98)
     );
+
   border:1px solid var(--line);
   border-radius:28px;
+
   box-shadow:
     0 30px 80px rgba(0,0,0,.38);
+
   overflow:hidden;
+
   min-height:690px;
+
   display:flex;
   flex-direction:column;
 }
@@ -376,20 +484,28 @@ h1 span{
 .chat-header{
   display:flex;
   align-items:center;
+
   gap:12px;
+
   padding:20px 22px;
+
   border-bottom:1px solid var(--line);
 }
 
 .avatar{
   width:42px;
   height:42px;
+
   border-radius:14px;
+
   display:grid;
   place-items:center;
+
   background:rgba(66,214,178,.13);
+
   border:
     1px solid rgba(66,214,178,.28);
+
   color:var(--accent);
   font-weight:800;
 }
@@ -397,6 +513,7 @@ h1 span{
 .chat-header small{
   display:flex;
   gap:6px;
+
   color:var(--muted);
   margin-top:3px;
 }
@@ -404,7 +521,9 @@ h1 span{
 .chat-header small i{
   width:7px;
   height:7px;
+
   border-radius:50%;
+
   background:var(--accent);
 }
 
@@ -415,11 +534,16 @@ h1 span{
 
 .messages{
   flex:1;
+
   padding:24px;
+
   overflow:auto;
+
   display:flex;
   flex-direction:column;
+
   gap:14px;
+
   min-height:360px;
   max-height:430px;
 }
@@ -434,16 +558,21 @@ h1 span{
 
 .bubble{
   max-width:82%;
+
   padding:13px 15px;
+
   border-radius:18px;
+
   line-height:1.5;
   font-size:14px;
 }
 
 .assistant .bubble{
   background:#132640;
+
   border:
     1px solid rgba(255,255,255,.06);
+
   border-bottom-left-radius:5px;
 }
 
@@ -454,81 +583,117 @@ h1 span{
       var(--accent2),
       #4c8be5
     );
+
   color:white;
+
   border-bottom-right-radius:5px;
 }
 
 .message.system .bubble{
   background:
     rgba(255,139,139,.09);
+
   border:
     1px solid rgba(255,139,139,.18);
+
   color:#ffd3d3;
+
   margin:auto;
 }
 
 .quick-actions{
   padding:0 22px 14px;
+
   display:flex;
   gap:8px;
+
   flex-wrap:wrap;
 }
 
 .quick-actions button{
   border:1px solid var(--line);
+
   background:
     rgba(255,255,255,.035);
+
   color:#ccdaea;
+
   border-radius:999px;
+
   padding:8px 11px;
+
   cursor:pointer;
 }
 
 .composer{
   padding:16px 20px 18px;
+
   border-top:1px solid var(--line);
 }
 
 #name{
   width:100%;
+
   border:0;
+
   background:transparent;
+
   color:var(--text);
+
   padding:0 4px 12px;
+
   outline:none;
+
   font-size:12px;
 }
 
 .input-row{
   display:flex;
+
   gap:10px;
+
   align-items:flex-end;
+
   background:#091728;
+
   border:1px solid var(--line);
+
   border-radius:18px;
+
   padding:10px;
 }
 
 textarea{
   resize:none;
+
   max-height:130px;
+
   flex:1;
+
   border:0;
   outline:none;
+
   background:transparent;
+
   color:var(--text);
+
   padding:5px 4px;
 }
 
 .send{
   width:42px;
   height:42px;
+
   border:0;
   border-radius:14px;
+
   background:var(--accent);
+
   color:#06111c;
+
   font-size:19px;
   font-weight:900;
+
   cursor:pointer;
 }
 
@@ -538,15 +703,22 @@ textarea{
 
 footer{
   display:flex;
+
   justify-content:space-between;
+
   gap:16px;
+
   color:#71849e;
+
   font-size:10px;
+
   padding:0 22px 18px;
 }
 
 
+/* ================================================= */
 /* TYPING */
+/* ================================================= */
 
 .typing{
   display:inline-flex;
@@ -556,8 +728,11 @@ footer{
 .typing span{
   width:6px;
   height:6px;
+
   background:#91a6c1;
+
   border-radius:50%;
+
   animation:pulse 1s infinite;
 }
 
@@ -570,22 +745,175 @@ footer{
 }
 
 @keyframes pulse{
-
   50%{
     opacity:.3;
     transform:translateY(-3px);
   }
-
 }
 
 
+/* ================================================= */
+/* HOW IT WORKS */
+/* ================================================= */
+
+.how-it-works{
+  grid-column:1 / -1;
+
+  width:100%;
+
+  margin-top:10px;
+
+  padding:28px;
+
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+
+  background:rgba(255,255,255,.02);
+}
+
+.section-heading span{
+  font-size:11px;
+
+  font-weight:700;
+
+  letter-spacing:.12em;
+
+  opacity:.55;
+}
+
+.section-heading h2{
+  margin:8px 0 6px;
+
+  font-size:24px;
+}
+
+.section-heading p{
+  margin:0;
+
+  font-size:14px;
+
+  opacity:.65;
+}
+
+.steps{
+  display:grid;
+
+  grid-template-columns:repeat(3,1fr);
+
+  gap:16px;
+
+  margin-top:24px;
+}
+
+.step{
+  padding:20px;
+
+  border-radius:14px;
+
+  background:rgba(255,255,255,.03);
+}
+
+.step strong{
+  font-size:12px;
+
+  opacity:.5;
+}
+
+.step h3{
+  margin:10px 0 8px;
+
+  font-size:16px;
+}
+
+.step p{
+  margin:0;
+
+  font-size:13px;
+
+  line-height:1.6;
+
+  opacity:.65;
+}
+
+
+/* ================================================= */
+/* BUSINESS BENEFITS */
+/* ================================================= */
+
+.business-benefits{
+  grid-column:1 / -1;
+
+  width:100%;
+
+  margin-top:10px;
+
+  padding:28px;
+
+  box-sizing:border-box;
+
+  border:1px solid rgba(255,255,255,.08);
+
+  border-radius:18px;
+
+  background:rgba(255,255,255,.02);
+}
+
+.business-benefits .benefit-grid{
+  display:grid;
+
+  grid-template-columns:repeat(3,1fr);
+
+  gap:16px;
+
+  margin-top:24px;
+}
+
+.business-benefits .benefit-card{
+  padding:20px;
+
+  border-radius:14px;
+
+  background:rgba(255,255,255,.03);
+
+  border:1px solid rgba(255,255,255,.04);
+}
+
+.business-benefits .benefit-card strong{
+  display:block;
+
+  font-size:12px;
+
+  opacity:.5;
+}
+
+.business-benefits .benefit-card h3{
+  margin:10px 0 8px;
+
+  font-size:16px;
+}
+
+.business-benefits .benefit-card p{
+  margin:0;
+
+  font-size:13px;
+
+  line-height:1.6;
+
+  opacity:.65;
+}
+
+
+/* ================================================= */
 /* RESPONSIVE */
+/* ================================================= */
 
 @media(max-width:900px){
 
   .shell{
     grid-template-columns:1fr;
+
     gap:26px;
+
     padding:28px 0 44px;
   }
 
@@ -597,7 +925,25 @@ footer{
     max-width:none;
   }
 
+  .how-it-works,
+  .business-benefits{
+    grid-column:1;
+  }
+
+  .chat-card{
+    min-height:600px;
+  }
 }
+
+
+@media(max-width:700px){
+
+  .steps,
+  .business-benefits .benefit-grid{
+    grid-template-columns:1fr;
+  }
+}
+
 
 @media(max-width:600px){
 
@@ -621,202 +967,8 @@ footer{
     flex-direction:column;
   }
 
-}
-.hero-cta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 22px;
-  flex-wrap: wrap;
-}
-
-.cta-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 18px;
-  border-radius: 10px;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 14px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.cta-primary:hover {
-  transform: translateY(-1px);
-  opacity: 0.9;
-}
-
-.hero-cta > span {
-  font-size: 13px;
-  opacity: 0.65;
-}
-.how-it-works {
-  margin-top: 10px;
-  padding: 28px;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px;
-  background: rgba(255,255,255,0.02);
-}
-
-.section-heading span {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  opacity: 0.55;
-}
-
-.section-heading h2 {
-  margin: 8px 0 6px;
-  font-size: 24px;
-}
-
-.section-heading p {
-  margin: 0;
-  font-size: 14px;
-  opacity: 0.65;
-}
-
-.steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.step {
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-}
-
-.step strong {
-  font-size: 12px;
-  opacity: 0.5;
-}
-
-.step h3 {
-  margin: 10px 0 8px;
-  font-size: 16px;
-}
-
-.step p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  opacity: 0.65;
-}
-
-@media (max-width: 700px) {
-  .steps {
-    grid-template-columns: 1fr;
-  }
-}
-.how-it-works {
-  grid-column: 1 / -1;
-}
-.how-it-works {
-  grid-column: 1 / -1;
-  width: 100%;
-  box-sizing: border-box;
-}
-/* BUSINESS BENEFITS */
-.business-benefits {
-  display: block !important;
-  width: 100%;
-  margin-top: 24px;
-  padding: 28px;
-  box-sizing: border-box;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px;
-  background: rgba(255,255,255,0.02);
-}
-
-.business-benefits .section-heading {
-  display: block;
-}
-
-.business-benefits .benefit-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.business-benefits .benefit-card {
-  display: block;
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-}
-
-.business-benefits .benefit-card strong {
-  font-size: 12px;
-  opacity: 0.5;
-}
-
-.business-benefits .benefit-card h3 {
-  margin: 10px 0 8px;
-  font-size: 16px;
-}
-
-.business-benefits .benefit-card p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  opacity: 0.65;
-}
-
-@media (max-width: 700px) {
-  .business-benefits .benefit-grid {
-    grid-template-columns: 1fr;
-  }
-}
-/* BUSINESS BENEFITS */
-
-.business-benefits {
-  width: 100%;
-  margin-top: 24px;
-  padding: 28px;
-  box-sizing: border-box;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px;
-  background: rgba(255,255,255,0.02);
-}
-
-.business-benefits .benefit-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.business-benefits .benefit-card {
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-}
-
-.business-benefits .benefit-card strong {
-  display: block;
-  font-size: 12px;
-  opacity: 0.5;
-}
-
-.business-benefits .benefit-card h3 {
-  margin: 10px 0 8px;
-  font-size: 16px;
-}
-
-.business-benefits .benefit-card p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  opacity: 0.65;
-}
-
-@media (max-width: 700px) {
-  .business-benefits .benefit-grid {
-    grid-template-columns: 1fr;
+  .how-it-works,
+  .business-benefits{
+    padding:20px;
   }
 }
