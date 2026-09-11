@@ -972,3 +972,92 @@ footer{
     padding:20px;
   }
 }
+/* ================================================= */
+/* FINAL CTA */
+/* ================================================= */
+
+.final-cta{
+  grid-column:1 / -1;
+
+  width:100%;
+
+  margin-top:10px;
+
+  padding:48px 28px;
+
+  box-sizing:border-box;
+
+  text-align:center;
+
+  border:1px solid rgba(66,214,178,.18);
+  border-radius:20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(66,214,178,.08),
+      rgba(98,168,255,.06)
+    );
+}
+
+.final-cta-content{
+  max-width:720px;
+  margin:0 auto;
+}
+
+.final-cta-content > span{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.14em;
+  color:var(--accent);
+}
+
+.final-cta h2{
+  margin:10px 0 12px;
+
+  font-size:clamp(28px,4vw,42px);
+
+  line-height:1.1;
+  letter-spacing:-.035em;
+}
+
+.final-cta p{
+  max-width:600px;
+
+  margin:0 auto 24px;
+
+  color:var(--muted);
+
+  font-size:15px;
+  line-height:1.7;
+}
+
+.final-cta .cta-primary{
+  background:var(--accent);
+  color:#06111c;
+
+  padding:13px 20px;
+
+  border-radius:12px;
+}
+
+.final-cta .cta-primary:hover{
+  opacity:.9;
+  transform:translateY(-2px);
+}
+
+@media(max-width:600px){
+
+  .final-cta{
+    padding:36px 20px;
+  }
+
+  .final-cta h2{
+    font-size:28px;
+  }
+
+  .final-cta p{
+    font-size:14px;
+  }
+
+}
