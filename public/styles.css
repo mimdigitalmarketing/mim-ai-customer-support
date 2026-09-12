@@ -1483,3 +1483,133 @@ footer{
     padding:19px;
   }
 }
+/* ================================================= */
+/* WHY WORK WITH MIM AI */
+/* ================================================= */
+
+.why-work-mim{
+  grid-column:1 / -1;
+  width:100%;
+  margin-top:10px;
+  padding:28px;
+  box-sizing:border-box;
+
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+
+  background:rgba(255,255,255,.02);
+}
+
+.why-work-mim .section-heading{
+  max-width:760px;
+}
+
+.why-work-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:26px;
+}
+
+.why-work-card{
+  padding:22px;
+
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.06);
+
+  background:rgba(255,255,255,.03);
+
+  transition:
+    transform .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.why-work-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(66,214,178,.22);
+  background:rgba(255,255,255,.045);
+}
+
+.why-work-card > strong{
+  display:block;
+
+  font-size:12px;
+  color:var(--accent);
+  opacity:.8;
+
+  margin-bottom:10px;
+}
+
+.why-work-card h3{
+  margin:0 0 9px;
+  font-size:17px;
+}
+
+.why-work-card p{
+  margin:0;
+
+  color:var(--muted);
+
+  font-size:13px;
+  line-height:1.65;
+}
+
+.why-work-bottom{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+
+  margin-top:20px;
+  padding:19px;
+
+  text-align:center;
+
+  border-radius:15px;
+
+  border:1px solid rgba(66,214,178,.12);
+
+  background:rgba(66,214,178,.035);
+}
+
+.why-work-bottom strong{
+  font-size:14px;
+  line-height:1.6;
+}
+
+.why-work-bottom span{
+  margin-top:6px;
+
+  color:var(--muted);
+
+  font-size:11px;
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+  .why-work-mim{
+    grid-column:1;
+  }
+
+  .why-work-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:600px){
+
+  .why-work-grid{
+    grid-template-columns:1fr;
+  }
+
+  .why-work-mim{
+    padding:20px;
+  }
+
+  .why-work-card{
+    padding:19px;
+  }
+}
