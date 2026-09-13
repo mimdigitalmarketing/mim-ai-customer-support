@@ -278,3 +278,57 @@ caseStatusForm.addEventListener(
     }
   }
 );
+const leadCaptureForm = document.getElementById("leadCaptureForm");
+const leadFormMessage = document.getElementById("leadFormMessage");
+
+if (leadCaptureForm) {
+  leadCaptureForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const submitButton = leadCaptureForm.querySelector("button");
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
+
+    const formData = new FormData(leadCaptureForm);
+
+    const payload = {
+      name: formData.get("name"),
+      business_name: formData.get("business_name"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      website: formData.get("website"),
+      business_type: formData.get("business_type"),
+      requirement: formData.get("requirement")
+    };
+
+    try {
+      const response = await fetch(
+        "https://n8n-yq85.srv1920147.hstgr.cloud/webhook/mim-lead-capture",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+
+      leadFormMessage.textContent =
+        "Thank you! Your request has been submitted successfully.";
+
+      leadCaptureForm.reset();
+
+    } catch (error) {
+      leadFormMessage.textContent =
+        "Something went wrong. Please try again or contact us directly.";
+    }
+
+    submitButton.disabled = false;
+    submitButton.textContent = "Submit Request →";
+  });
+}
